@@ -1,0 +1,1226 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Graph Casino (Protótipo) — Fictício</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#0f1835;
+      --panel2:#0c1430;
+      --line:#1d2a57;
+      --text:#e8efff;
+      --muted:#a9b7e6;
+      --good:#35d07f;
+      --bad:#ff4d6d;
+      --accent:#4aa3ff;
+      --warn:#ffcc66;
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --radius:16px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:
+        radial-gradient(1000px 600px at 20% 10%, rgba(74,163,255,.18), transparent 60%),
+        radial-gradient(800px 520px at 85% 20%, rgba(53,208,127,.13), transparent 55%),
+        radial-gradient(900px 700px at 50% 95%, rgba(255,77,109,.12), transparent 55%),
+        var(--bg);
+      color:var(--text);
+      overflow-x:hidden;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .topbar{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter: blur(10px);
+      background: rgba(11,16,32,.55);
+      border-bottom:1px solid rgba(29,42,87,.55);
+    }
+    .topbar-inner{
+      max-width:1200px;
+      margin:0 auto;
+      padding:14px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      user-select:none;
+      flex-wrap:wrap;
+    }
+    .logo{
+      width:40px; height:40px;
+      border-radius:12px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,.18), transparent 55%),
+        linear-gradient(135deg, rgba(74,163,255,.85), rgba(74,163,255,.25));
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow: 0 12px 30px rgba(74,163,255,.18);
+      position:relative;
+      overflow:hidden;
+    }
+    .logo::after{
+      content:"";
+      position:absolute;
+      inset:-30%;
+      background: conic-gradient(from 180deg, transparent, rgba(255,255,255,.15), transparent);
+      animation: spin 5.5s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .brand h1{
+      font-size:16px;
+      margin:0;
+      letter-spacing:.4px;
+      line-height:1.2;
+    }
+    .brand small{color:var(--muted)}
+
+    .wallet{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .pill{
+      background: rgba(15,24,53,.75);
+      border:1px solid rgba(29,42,87,.65);
+      border-radius:999px;
+      padding:10px 12px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    }
+    .pill .label{color:var(--muted); font-size:12px}
+    .pill .value{
+      font-weight:800;
+      letter-spacing:.3px;
+    }
+
+    .btn{
+      border:1px solid rgba(29,42,87,.7);
+      background: rgba(15,24,53,.75);
+      color:var(--text);
+      border-radius:12px;
+      padding:10px 12px;
+      cursor:pointer;
+      transition: transform .08s ease, background .2s ease, border-color .2s ease;
+      user-select:none;
+      display:inline-flex; align-items:center; gap:10px;
+      white-space:nowrap;
+    }
+    .btn:hover{ background: rgba(20,32,74,.75); border-color: rgba(74,163,255,.45); }
+    .btn:active{ transform: translateY(1px); }
+
+    .btn-primary{
+      background: linear-gradient(135deg, rgba(74,163,255,.9), rgba(74,163,255,.25));
+      border-color: rgba(74,163,255,.55);
+      box-shadow: 0 14px 40px rgba(74,163,255,.18);
+    }
+    .btn-primary:hover{ filter: brightness(1.03); }
+    .btn-danger{
+      background: linear-gradient(135deg, rgba(255,77,109,.95), rgba(255,77,109,.25));
+      border-color: rgba(255,77,109,.55);
+      box-shadow: 0 14px 40px rgba(255,77,109,.14);
+    }
+    .btn-success{
+      background: linear-gradient(135deg, rgba(53,208,127,.92), rgba(53,208,127,.25));
+      border-color: rgba(53,208,127,.55);
+      box-shadow: 0 14px 40px rgba(53,208,127,.14);
+    }
+    .btn-warning{
+      background: linear-gradient(135deg, rgba(255,204,102,.92), rgba(255,204,102,.25));
+      border-color: rgba(255,204,102,.55);
+      box-shadow: 0 14px 40px rgba(255,204,102,.14);
+      color:#0b1020;
+    }
+
+    .container{
+      max-width:1200px;
+      margin:0 auto;
+      padding:18px;
+      display:grid;
+      grid-template-columns: 1.6fr .9fr;
+      gap:16px;
+      flex:1;
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(15,24,53,.88), rgba(12,20,48,.88));
+      border:1px solid rgba(29,42,87,.65);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+
+    .card-header{
+      padding:14px 14px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      border-bottom:1px solid rgba(29,42,87,.55);
+      flex-wrap:wrap;
+    }
+    .card-title{
+      display:flex; flex-direction:column; gap:4px;
+    }
+    .card-title h2{margin:0; font-size:14px; letter-spacing:.3px}
+    .card-title p{margin:0; color:var(--muted); font-size:12px}
+
+    .market-row{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+    .select{
+      border:1px solid rgba(29,42,87,.65);
+      background: rgba(10,16,36,.6);
+      color:var(--text);
+      border-radius:12px;
+      padding:10px 12px;
+      outline:none;
+      cursor:pointer;
+      min-width:140px;
+    }
+    .badge{
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid rgba(29,42,87,.6);
+      background: rgba(10,16,36,.55);
+      color:var(--muted);
+      font-size:12px;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+    }
+    .dot{
+      width:8px; height:8px; border-radius:50%;
+      background: var(--warn);
+      box-shadow: 0 0 0 4px rgba(255,204,102,.12);
+    }
+
+    /* Chart area */
+    .chart-wrap{
+      padding:12px 14px 14px;
+    }
+    .chart{
+      height:360px;
+      border-radius: 16px;
+      background:
+        radial-gradient(500px 250px at 20% 20%, rgba(74,163,255,.18), transparent 60%),
+        radial-gradient(520px 260px at 85% 25%, rgba(53,208,127,.16), transparent 65%),
+        linear-gradient(180deg, rgba(10,16,36,.75), rgba(8,12,26,.75));
+      border:1px solid rgba(29,42,87,.65);
+      position:relative;
+      overflow:hidden;
+    }
+    .gridlines{
+      position:absolute; inset:0;
+      background:
+        linear-gradient(to right, rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size: 56px 56px;
+      opacity:.55;
+      pointer-events:none;
+    }
+    .price{
+      position:absolute; top:12px; left:12px;
+      display:flex; flex-direction:column; gap:4px;
+      background: rgba(11,16,32,.55);
+      border:1px solid rgba(29,42,87,.65);
+      border-radius:14px;
+      padding:10px 12px;
+      backdrop-filter: blur(8px);
+    }
+    .price .big{
+      font-size:18px;
+      font-weight:900;
+      letter-spacing:.3px;
+    }
+    .price .mini{
+      font-size:12px;
+      color:var(--muted);
+      display:flex; gap:8px; align-items:center;
+    }
+    .chg{
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(29,42,87,.65);
+      background: rgba(10,16,36,.55);
+      color:var(--muted);
+      font-weight:700;
+      font-size:12px;
+    }
+    .chg.up{ color: var(--good); border-color: rgba(53,208,127,.5); }
+    .chg.down{ color: var(--bad); border-color: rgba(255,77,109,.5); }
+
+    .line{
+      position:absolute; inset:0;
+      display:flex;
+      align-items:stretch;
+      padding:26px 18px 18px 18px;
+    }
+    svg{ width:100%; height:100%; }
+    .glow{
+      filter: drop-shadow(0 0 18px rgba(74,163,255,.35));
+    }
+
+    .marker{
+      position:absolute;
+      width:12px; height:12px;
+      border-radius:50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 6px rgba(74,163,255,.12), 0 12px 35px rgba(74,163,255,.22);
+      border:1px solid rgba(255,255,255,.18);
+      transform: translate(-50%, -50%);
+      pointer-events:none;
+    }
+
+    /* Right panel */
+    .side{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+
+    .section{
+      padding:14px;
+    }
+    .section h3{
+      margin:0 0 10px;
+      font-size:13px;
+      letter-spacing:.35px;
+    }
+    .muted{color:var(--muted); font-size:12px; line-height:1.4}
+
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    .field{
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-top:10px;
+    }
+    .field label{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .input{
+      border:1px solid rgba(29,42,87,.65);
+      background: rgba(10,16,36,.6);
+      color:var(--text);
+      border-radius:12px;
+      padding:12px 12px;
+      outline:none;
+      font-weight:700;
+    }
+    .input:focus{ border-color: rgba(74,163,255,.55); box-shadow: 0 0 0 4px rgba(74,163,255,.12); }
+
+    .split{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+
+    .kpi{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    .kpi .mini-card{
+      background: rgba(10,16,36,.55);
+      border:1px solid rgba(29,42,87,.55);
+      border-radius:14px;
+      padding:10px 12px;
+    }
+    .kpi .mini-card .t{color:var(--muted); font-size:12px}
+    .kpi .mini-card .v{font-weight:900; margin-top:4px}
+
+    .log{
+      max-height:170px;
+      overflow:auto;
+      padding-right:6px;
+      margin-top:10px;
+    }
+    .log::-webkit-scrollbar{ width:10px }
+    .log::-webkit-scrollbar-thumb{
+      background: rgba(29,42,87,.7);
+      border-radius:999px;
+      border:2px solid rgba(10,16,36,.65);
+    }
+    .log-item{
+      border:1px solid rgba(29,42,87,.45);
+      background: rgba(10,16,36,.45);
+      border-radius:14px;
+      padding:10px 12px;
+      margin-bottom:8px;
+      font-size:12px;
+      line-height:1.35;
+      color: var(--muted);
+    }
+    .log-item b{ color: var(--text); }
+    .log-item .tag{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid rgba(29,42,87,.55);
+      background: rgba(11,16,32,.55);
+      margin-left:8px;
+      font-weight:800;
+      font-size:11px;
+    }
+    .tag.win{ color: var(--good); border-color: rgba(53,208,127,.5); }
+    .tag.lose{ color: var(--bad); border-color: rgba(255,77,109,.5); }
+    .tag.info{ color: var(--accent); border-color: rgba(74,163,255,.5); }
+
+    .footer-note{
+      padding:12px 14px;
+      border-top:1px solid rgba(29,42,87,.55);
+      color: var(--muted);
+      font-size:12px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    /* Modal de Saque */
+    .modal{
+      display:none;
+      position:fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background: rgba(11,16,32,.85);
+      backdrop-filter: blur(10px);
+      z-index:100;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+    .modal.active{
+      display:flex;
+    }
+    .modal-content{
+      background: linear-gradient(180deg, rgba(15,24,53,.95), rgba(12,20,48,.95));
+      border:1px solid rgba(29,42,87,.85);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      max-width:500px;
+      width:100%;
+      max-height:90vh;
+      overflow-y:auto;
+    }
+    .modal-header{
+      padding:18px 20px;
+      border-bottom:1px solid rgba(29,42,87,.55);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .modal-header h2{
+      margin:0;
+      font-size:16px;
+    }
+    .modal-close{
+      background:none;
+      border:none;
+      color:var(--muted);
+      font-size:24px;
+      cursor:pointer;
+      padding:0;
+      width:30px; height:30px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:8px;
+    }
+    .modal-close:hover{
+      background:rgba(255,255,255,.1);
+    }
+    .modal-body{
+      padding:20px;
+    }
+
+    .withdraw-options{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap:15px;
+      margin-top:15px;
+    }
+    .option-card{
+      background: rgba(10,16,36,.55);
+      border:1px solid rgba(29,42,87,.55);
+      border-radius:14px;
+      padding:15px;
+      cursor:pointer;
+      transition: all .2s ease;
+      text-align:center;
+    }
+    .option-card:hover{
+      border-color:var(--accent);
+      transform:translateY(-2px);
+    }
+    .option-card.selected{
+      border-color:var(--good);
+      background:rgba(53,208,127,.1);
+    }
+    .option-icon{
+      font-size:32px;
+      margin-bottom:10px;
+    }
+    .option-title{
+      font-weight:700;
+      margin-bottom:5px;
+    }
+    .option-desc{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.4;
+    }
+    .option-price{
+      margin-top:10px;
+      font-weight:900;
+      color:var(--good);
+    }
+    .prize-image{
+      width:80px;
+      height:80px;
+      margin:10px auto;
+      border-radius:12px;
+      background:linear-gradient(135deg, rgba(255,255,255,.1), rgba(255,255,255,.05));
+      border:1px solid rgba(255,255,255,.1);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:32px;
+    }
+
+    /* Crédito no rodapé */
+    .site-footer{
+      text-align:center;
+      padding:15px;
+      color:var(--muted);
+      font-size:12px;
+      border-top:1px solid rgba(29,42,87,.3);
+      margin-top:auto;
+    }
+    .site-footer a{
+      color:var(--accent);
+      text-decoration:none;
+    }
+    .site-footer a:hover{
+      text-decoration:underline;
+    }
+
+    /* Responsividade aprimorada */
+    @media (max-width: 980px){
+      .container{ grid-template-columns: 1fr; }
+      .chart{ height:320px; }
+      .topbar-inner{
+        flex-direction:column;
+        align-items:stretch;
+        gap:12px;
+      }
+      .wallet{
+        justify-content:center;
+      }
+    }
+
+    @media (max-width: 768px){
+      .chart{ height:280px; }
+      .split{
+        grid-template-columns: 1fr;
+      }
+      .kpi{
+        grid-template-columns: 1fr;
+      }
+      .withdraw-options{
+        grid-template-columns: 1fr;
+      }
+      .modal-content{
+        max-width:95%;
+      }
+      .row{
+        flex-direction:column;
+        align-items:stretch;
+      }
+      .btn{
+        width:100%;
+        justify-content:center;
+      }
+      .market-row{
+        justify-content:center;
+      }
+    }
+
+    @media (max-width: 480px){
+      .chart{ height:240px; }
+      .price .big{ font-size:16px; }
+      .card-header{
+        flex-direction:column;
+        align-items:stretch;
+        gap:10px;
+      }
+      .brand{
+        justify-content:center;
+        text-align:center;
+      }
+      .pill{
+        width:100%;
+        justify-content:center;
+      }
+      .footer-note{
+        flex-direction:column;
+        text-align:center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Graph Casino <small>• protótipo fictício</small></h1>
+          <small style="color:var(--muted)">Aposte se o "preço" sobe ou desce (simulação)</small>
+        </div>
+      </div>
+
+      <div class="wallet">
+        <div class="pill" title="Saldo fictício (simulado)">
+          <span class="label">Saldo</span>
+          <span class="value" id="saldoTop">R$ 0,00</span>
+        </div>
+        <button class="btn btn-primary" id="btnAbrirDeposito">💳 Depositar</button>
+        <button class="btn btn-warning" id="btnAbrirSaque">💰 Sacar</button>
+        <button class="btn" id="btnReset">♻️ Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="container">
+    <!-- LEFT: Chart -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <h2>Gráfico (simulação)</h2>
+          <p>Atualiza sozinho • Sem dados reais • Apenas visual</p>
+        </div>
+
+        <div class="market-row">
+          <select class="select" id="asset">
+            <option value="BTC/USDT">BTC/USDT</option>
+            <option value="ETH/USDT">ETH/USDT</option>
+            <option value="EUR/USD">EUR/USD</option>
+            <option value="PETR4">PETR4</option>
+            <option value="VALE3">VALE3</option>
+          </select>
+          <span class="badge"><span class="dot"></span> Ao vivo (fake)</span>
+        </div>
+      </div>
+
+      <div class="chart-wrap">
+        <div class="chart" role="img" aria-label="Gráfico fictício animado">
+          <div class="gridlines"></div>
+
+          <div class="price">
+            <div class="big" id="priceNow">0.000</div>
+            <div class="mini">
+              <span id="assetLabel">BTC/USDT</span>
+              <span class="chg" id="chgBadge">0.00%</span>
+            </div>
+          </div>
+
+          <div class="line">
+            <svg viewBox="0 0 1000 420" preserveAspectRatio="none" aria-hidden="true">
+              <path id="areaPath" d="" fill="rgba(74,163,255,.12)"></path>
+              <path id="linePath" class="glow" d="" fill="none" stroke="rgba(74,163,255,.95)" stroke-width="3"></path>
+            </svg>
+          </div>
+
+          <div class="marker" id="marker" style="left: 90%; top: 50%"></div>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        <span>⚠️ Protótipo: sem dinheiro real, sem promessa de ganho.</span>
+        <span>Dica: deposite saldo fictício e teste apostas.</span>
+      </div>
+    </section>
+
+    <!-- RIGHT: Controls -->
+    <aside class="side">
+      <!-- Deposit -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <h2>Carteira (fictícia)</h2>
+            <p>Depósito manual • Saldo fica salvo no navegador</p>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="field">
+            <label for="depositoValor">Valor do depósito (R$)</label>
+            <input class="input" id="depositoValor" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Ex.: 100.00" />
+          </div>
+
+          <div class="row">
+            <button class="btn btn-primary" id="btnDepositar">➕ Confirmar depósito</button>
+            <span class="muted" id="depositHint">Coloque qualquer valor e clique em depositar.</span>
+          </div>
+
+          <div class="kpi">
+            <div class="mini-card">
+              <div class="t">Saldo atual</div>
+              <div class="v" id="saldoSide">R$ 0,00</div>
+            </div>
+            <div class="mini-card">
+              <div class="t">Último resultado</div>
+              <div class="v" id="lastResult">—</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bet -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <h2>Aposta rápida</h2>
+            <p>Escolha valor + tempo • Alta ou Baixa</p>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="split">
+            <div class="field" style="margin-top:0">
+              <label for="betAmount">Valor da aposta (R$)</label>
+              <input class="input" id="betAmount" type="number" inputmode="decimal" min="1" step="0.01" placeholder="Ex.: 10.00" />
+            </div>
+            <div class="field" style="margin-top:0">
+              <label for="betTime">Expiração</label>
+              <select class="select" id="betTime" style="padding:12px 12px; border-radius:12px;">
+                <option value="5">5s</option>
+                <option value="10" selected>10s</option>
+                <option value="15">15s</option>
+                <option value="30">30s</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <span class="badge">Payout fixo: <b style="color:var(--text)">+85%</b></span>
+            <span class="badge">Taxa: <b style="color:var(--text)">0%</b></span>
+          </div>
+
+          <div class="row" style="margin-top:12px">
+            <button class="btn btn-success" id="btnUp" style="flex:1; justify-content:center;">⬆️ APOSTAR ALTA</button>
+            <button class="btn btn-danger" id="btnDown" style="flex:1; justify-content:center;">⬇️ APOSTAR BAIXA</button>
+          </div>
+
+          <div class="muted" style="margin-top:10px" id="betStatus">
+            Nenhuma aposta em andamento.
+          </div>
+
+          <div class="log" id="log"></div>
+        </div>
+
+        <div class="footer-note">
+          <span>💾 Saldo salvo em <code style="color:var(--text)">localStorage</code></span>
+          <span>🎲 Resultado é simulação</span>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <!-- Modal de Saque -->
+  <div class="modal" id="modalSaque">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>💰 Saque ou Resgate de Prêmios</h2>
+        <button class="modal-close" id="btnFecharModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="saqueValor">Valor para saque (R$)</label>
+          <input class="input" id="saqueValor" type="number" inputmode="decimal" min="1" step="0.01" placeholder="Ex.: 50.00" />
+        </div>
+        <p class="muted" style="margin-top:10px">Selecione uma opção de saque:</p>
+        
+        <div class="withdraw-options">
+          <!-- Opção PIX -->
+          <div class="option-card" data-type="pix">
+            <div class="option-icon">📱</div>
+            <div class="option-title">PIX (Instantâneo)</div>
+            <div class="option-desc">Saque rápido via PIX para qualquer banco. Processamento em até 2 minutos.</div>
+            <div class="option-price">Taxa: 0%</div>
+          </div>
+          
+          <!-- Prêmio iPhone -->
+          <div class="option-card" data-type="iphone">
+            <div class="prize-image">📱</div>
+            <div class="option-title">iPhone 15 Pro</div>
+            <div class="option-desc">iPhone 15 Pro 256GB • Para saldo mínimo de R$ 8.000,00</div>
+            <div class="option-price">R$ 8.000,00</div>
+          </div>
+          
+          <!-- Prêmio Relógio -->
+          <div class="option-card" data-type="relogio">
+            <div class="prize-image">⌚</div>
+            <div class="option-title">Relógio Premium</div>
+            <div class="option-desc">Relógio inteligente premium • Para saldo mínimo de R$ 3.500,00</div>
+            <div class="option-price">R$ 3.500,00</div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:20px">
+          <button class="btn btn-warning" id="btnConfirmarSaque" style="flex:1">💸 Confirmar Saque</button>
+          <button class="btn" id="btnCancelarSaque" style="flex:1">Cancelar</button>
+        </div>
+        
+        <p class="muted" style="margin-top:15px; font-size:11px; text-align:center">
+          ⚠️ Lembrete: Este é um protótipo fictício. Nenhum saque real será processado.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rodapé do site -->
+  <footer class="site-footer">
+    <p>Feito por <strong>Emanuel Lucas</strong> • Protótipo educativo fictício • Não use com dinheiro real</p>
+    <p>Este site é apenas para demonstração de conceitos de interface e simulação.</p>
+  </footer>
+
+  <script>
+    // ===== Util =====
+    const fmtBRL = (n) => (n).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+    const clamp = (v,min,max) => Math.max(min, Math.min(max, v));
+
+    // ===== State =====
+    const LS_KEY = "graphcasino_proto_v2";
+    const state = {
+      saldo: 0,
+      asset: "BTC/USDT",
+      payout: 0.85,
+      price: 1000,
+      priceStart: 1000,
+      t0: Date.now(),
+      points: [],
+      bet: null, // {dir, amount, startPrice, endAt, startedAt}
+      lastResult: "—"
+    };
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(LS_KEY);
+        if(!raw) return;
+        const data = JSON.parse(raw);
+        if(typeof data.saldo === "number") state.saldo = Math.max(0, data.saldo);
+        if(typeof data.asset === "string") state.asset = data.asset;
+      }catch(e){}
+    }
+    function saveState(){
+      localStorage.setItem(LS_KEY, JSON.stringify({
+        saldo: state.saldo,
+        asset: state.asset
+      }));
+    }
+
+    // ===== Elements =====
+    const elSaldoTop = document.getElementById("saldoTop");
+    const elSaldoSide = document.getElementById("saldoSide");
+    const elDeposit = document.getElementById("depositoValor");
+    const btnDepositar = document.getElementById("btnDepositar");
+    const btnReset = document.getElementById("btnReset");
+    const btnAbrirDeposito = document.getElementById("btnAbrirDeposito");
+    const btnAbrirSaque = document.getElementById("btnAbrirSaque");
+    
+    // Modal elements
+    const modalSaque = document.getElementById("modalSaque");
+    const btnFecharModal = document.getElementById("btnFecharModal");
+    const btnCancelarSaque = document.getElementById("btnCancelarSaque");
+    const btnConfirmarSaque = document.getElementById("btnConfirmarSaque");
+    const elSaqueValor = document.getElementById("saqueValor");
+    const optionCards = document.querySelectorAll('.option-card');
+
+    const elAsset = document.getElementById("asset");
+    const elAssetLabel = document.getElementById("assetLabel");
+
+    const elPriceNow = document.getElementById("priceNow");
+    const elChgBadge = document.getElementById("chgBadge");
+
+    const elBetAmount = document.getElementById("betAmount");
+    const elBetTime = document.getElementById("betTime");
+    const btnUp = document.getElementById("btnUp");
+    const btnDown = document.getElementById("btnDown");
+    const elBetStatus = document.getElementById("betStatus");
+    const elLog = document.getElementById("log");
+    const elLastResult = document.getElementById("lastResult");
+
+    const linePath = document.getElementById("linePath");
+    const areaPath = document.getElementById("areaPath");
+    const marker = document.getElementById("marker");
+
+    // ===== Modal State =====
+    let selectedOption = 'pix';
+
+    // ===== UI =====
+    function syncSaldo(){
+      elSaldoTop.textContent = fmtBRL(state.saldo);
+      elSaldoSide.textContent = fmtBRL(state.saldo);
+      elLastResult.textContent = state.lastResult;
+      saveState();
+    }
+
+    function addLog(text, tagType="info"){
+      const div = document.createElement("div");
+      div.className = "log-item";
+      const tag = tagType === "win" ? "WIN" : tagType === "lose" ? "LOSE" : "INFO";
+      div.innerHTML = `<b>${new Date().toLocaleTimeString("pt-BR")}</b> — ${text}
+        <span class="tag ${tagType}">${tag}</span>`;
+      elLog.prepend(div);
+    }
+
+    function setAsset(a){
+      state.asset = a;
+      elAssetLabel.textContent = a;
+      // reseta a simulação do preço para dar sensação de "novo mercado"
+      state.priceStart = 500 + Math.random()*2500;
+      state.price = state.priceStart;
+      state.t0 = Date.now();
+      state.points = [];
+      addLog(`Mercado selecionado: <b>${a}</b>`, "info");
+      saveState();
+    }
+
+    // ===== Modal Functions =====
+    function openSaqueModal(){
+      elSaqueValor.value = state.saldo > 0 ? state.saldo.toFixed(2) : "";
+      selectedOption = 'pix';
+      updateOptionSelection();
+      modalSaque.classList.add('active');
+    }
+
+    function closeSaqueModal(){
+      modalSaque.classList.remove('active');
+      elSaqueValor.value = "";
+      selectedOption = 'pix';
+      updateOptionSelection();
+    }
+
+    function updateOptionSelection(){
+      optionCards.forEach(card => {
+        if(card.dataset.type === selectedOption){
+          card.classList.add('selected');
+        } else {
+          card.classList.remove('selected');
+        }
+      });
+    }
+
+    function processSaque(){
+      const valor = Number(elSaqueValor.value || 0);
+      
+      if(!isFinite(valor) || valor <= 0){
+        addLog("Valor de saque inválido.", "lose");
+        return;
+      }
+      
+      if(valor > state.saldo){
+        addLog("Saldo insuficiente para saque.", "lose");
+        return;
+      }
+
+      // Verificar requisitos mínimos para prêmios
+      if(selectedOption === 'iphone' && valor < 8000){
+        addLog("Prêmio iPhone 15 Pro requer saldo mínimo de R$ 8.000,00", "lose");
+        return;
+      }
+      
+      if(selectedOption === 'relogio' && valor < 3500){
+        addLog("Prêmio Relógio Premium requer saldo mínimo de R$ 3.500,00", "lose");
+        return;
+      }
+
+      // Processar saque
+      state.saldo = +(state.saldo - valor).toFixed(2);
+      syncSaldo();
+      
+      let mensagem = "";
+      if(selectedOption === 'pix'){
+        mensagem = `Saque de ${fmtBRL(valor)} via PIX solicitado (fictício).`;
+      } else if(selectedOption === 'iphone'){
+        mensagem = `Resgate de iPhone 15 Pro por ${fmtBRL(valor)} confirmado (fictício).`;
+      } else if(selectedOption === 'relogio'){
+        mensagem = `Resgate de Relógio Premium por ${fmtBRL(valor)} confirmado (fictício).`;
+      }
+      
+      addLog(mensagem, "win");
+      closeSaqueModal();
+      
+      // Limpar campo
+      elSaqueValor.value = "";
+    }
+
+    // ===== Deposit =====
+    function deposit(){
+      const v = Number(elDeposit.value || 0);
+      if(!isFinite(v) || v <= 0){
+        addLog("Depósito inválido. Digite um valor maior que 0.", "lose");
+        return;
+      }
+      state.saldo = +(state.saldo + v).toFixed(2);
+      elDeposit.value = "";
+      syncSaldo();
+      addLog(`Depósito fictício de <b>${fmtBRL(v)}</b> realizado.`, "win");
+    }
+
+    // ===== Chart sim =====
+    function nextPrice(){
+      // passeio aleatório suave + tendência leve que muda com o tempo
+      const t = (Date.now() - state.t0) / 1000;
+      const drift = Math.sin(t/5) * 0.15;     // tendência oscilante
+      const noise = (Math.random() - 0.5) * 0.9; // ruído
+      const delta = drift + noise;
+
+      // sensibilidade por "ativo" (só pra variar)
+      const mult =
+        state.asset.startsWith("BTC") ? 2.2 :
+        state.asset.startsWith("ETH") ? 1.8 :
+        state.asset.includes("/") ? 0.9 :
+        1.2;
+
+      state.price = Math.max(0.001, state.price + delta * mult);
+
+      // pontos do gráfico
+      const maxPoints = 80;
+      state.points.push(state.price);
+      if(state.points.length > maxPoints) state.points.shift();
+
+      // UI de preço e variação %
+      const chg = ((state.price - state.priceStart) / state.priceStart) * 100;
+      elPriceNow.textContent = state.price.toFixed(3);
+      elChgBadge.textContent = `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%`;
+      elChgBadge.classList.toggle("up", chg >= 0);
+      elChgBadge.classList.toggle("down", chg < 0);
+    }
+
+    function renderPath(){
+      if(state.points.length < 2) return;
+
+      const w = 1000, h = 420;
+      const padTop = 40, padBottom = 40;
+
+      const min = Math.min(...state.points);
+      const max = Math.max(...state.points);
+      const span = Math.max(0.0001, max - min);
+
+      const toX = (i) => (i / (state.points.length - 1)) * w;
+      const toY = (p) => {
+        const norm = (p - min) / span; // 0..1
+        const y = (1 - norm) * (h - padTop - padBottom) + padTop;
+        return y;
+      };
+
+      let d = "";
+      for(let i=0;i<state.points.length;i++){
+        const x = toX(i);
+        const y = toY(state.points[i]);
+        d += (i===0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
+      }
+      linePath.setAttribute("d", d);
+
+      // área
+      const lastX = toX(state.points.length-1);
+      const baseY = h - padBottom;
+      const areaD = `${d} L ${lastX} ${baseY} L 0 ${baseY} Z`;
+      areaPath.setAttribute("d", areaD);
+
+      // marcador no último ponto
+      const mx = (lastX / w) * 100;
+      const my = (toY(state.points[state.points.length-1]) / h) * 100;
+      marker.style.left = `${mx}%`;
+      marker.style.top = `${my}%`;
+    }
+
+    // ===== Betting =====
+    function startBet(dir){
+      if(state.bet){
+        addLog("Já existe uma aposta em andamento.", "lose");
+        return;
+      }
+      const amount = Number(elBetAmount.value || 0);
+      if(!isFinite(amount) || amount <= 0){
+        addLog("Valor de aposta inválido.", "lose");
+        return;
+      }
+      if(amount > state.saldo){
+        addLog("Saldo insuficiente para essa aposta.", "lose");
+        return;
+      }
+
+      const seconds = Number(elBetTime.value || 10);
+      const now = Date.now();
+
+      // debita na hora
+      state.saldo = +(state.saldo - amount).toFixed(2);
+      syncSaldo();
+
+      state.bet = {
+        dir,
+        amount,
+        startPrice: state.price,
+        startedAt: now,
+        endAt: now + seconds*1000
+      };
+
+      elBetStatus.innerHTML = `Aposta em andamento: <b>${dir === "up" ? "ALTA" : "BAIXA"}</b> • Valor <b>${fmtBRL(amount)}</b> • Expira em <b>${seconds}s</b>`;
+      addLog(`Aposta iniciada em <b>${dir === "up" ? "ALTA" : "BAIXA"}</b> com ${fmtBRL(amount)} (payout +${Math.round(state.payout*100)}%).`, "info");
+    }
+
+    function settleBet(){
+      const b = state.bet;
+      if(!b) return;
+
+      // regra simples: compara preço final com inicial
+      const endPrice = state.price;
+      const up = endPrice > b.startPrice;
+      const down = endPrice < b.startPrice;
+
+      let win = false;
+      if(b.dir === "up") win = up;
+      if(b.dir === "down") win = down;
+
+      // empate (igual) => perde (pra manter simples)
+      if(win){
+        const profit = b.amount * state.payout;
+        const credit = b.amount + profit;
+        state.saldo = +(state.saldo + credit).toFixed(2);
+        state.lastResult = `Ganhou ${fmtBRL(credit)} (lucro ${fmtBRL(profit)})`;
+        addLog(
+          `✅ Você ganhou! Entrada: <b>${b.startPrice.toFixed(3)}</b> → Saída: <b>${endPrice.toFixed(3)}</b>. Crédito: <b>${fmtBRL(credit)}</b>.`,
+          "win"
+        );
+      }else{
+        state.lastResult = `Perdeu ${fmtBRL(b.amount)}`;
+        addLog(
+          `❌ Você perdeu. Entrada: <b>${b.startPrice.toFixed(3)}</b> → Saída: <b>${endPrice.toFixed(3)}</b>.`,
+          "lose"
+        );
+      }
+
+      state.bet = null;
+      syncSaldo();
+      elBetStatus.textContent = "Nenhuma aposta em andamento.";
+    }
+
+    function tickBet(){
+      if(!state.bet) return;
+      const now = Date.now();
+      const msLeft = state.bet.endAt - now;
+
+      if(msLeft <= 0){
+        settleBet();
+        return;
+      }
+
+      const sLeft = Math.ceil(msLeft / 1000);
+      elBetStatus.innerHTML = `Aposta em andamento: <b>${state.bet.dir === "up" ? "ALTA" : "BAIXA"}</b> • Valor <b>${fmtBRL(state.bet.amount)}</b> • Falta <b>${sLeft}s</b>`;
+    }
+
+    // ===== Events =====
+    btnDepositar.addEventListener("click", deposit);
+    elDeposit.addEventListener("keydown", (e)=>{ if(e.key==="Enter") deposit(); });
+
+    btnUp.addEventListener("click", ()=> startBet("up"));
+    btnDown.addEventListener("click", ()=> startBet("down"));
+
+    elAsset.addEventListener("change", (e)=> setAsset(e.target.value));
+
+    btnReset.addEventListener("click", ()=>{
+      state.saldo = 0;
+      state.bet = null;
+      state.lastResult = "—";
+      state.priceStart = 1000;
+      state.price = 1000;
+      state.points = [];
+      syncSaldo();
+      elBetStatus.textContent = "Nenhuma aposta em andamento.";
+      elLog.innerHTML = "";
+      addLog("Reset realizado (saldo e histórico zerados).", "info");
+      saveState();
+    });
+
+    btnAbrirDeposito.addEventListener("click", ()=>{
+      document.getElementById("depositoValor").focus();
+    });
+
+    // Modal events
+    btnAbrirSaque.addEventListener("click", openSaqueModal);
+    btnFecharModal.addEventListener("click", closeSaqueModal);
+    btnCancelarSaque.addEventListener("click", closeSaqueModal);
+
+    optionCards.forEach(card => {
+      card.addEventListener("click", () => {
+        selectedOption = card.dataset.type;
+        updateOptionSelection();
+      });
+    });
+
+    btnConfirmarSaque.addEventListener("click", processSaque);
+    elSaqueValor.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter") processSaque();
+    });
+
+    // Fechar modal com ESC
+    document.addEventListener("keydown", (e)=>{
+      if(e.key === "Escape" && modalSaque.classList.contains('active')){
+        closeSaqueModal();
+      }
+    });
+
+    // ===== Init =====
+    loadState();
+    syncSaldo();
+    elAsset.value = state.asset;
+    setAsset(state.asset);
+
+    // loop do gráfico
+    setInterval(()=>{
+      nextPrice();
+      renderPath();
+      tickBet();
+    }, 160);
+
+    // primeira mensagem
+    addLog("Bem-vindo! Deposite saldo fictício e teste apostas (simulação).", "info");
+  </script>
+</body>
+</html>
