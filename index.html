@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NotaCerta Scanner v2.1</title>
+    <title>NotaCerta Scanner v3.0</title>
     <style>
         * {
             margin: 0;
@@ -168,51 +168,63 @@
             font-size: 16px;
         }
 
-        .question-grid {
-            display: grid;
-            grid-template-columns: 60px 80px 80px 1fr;
-            gap: 8px;
+        /* Grid para o detalhamento das questões - CORRIGIDO */
+        .questions-table {
+            width: 100%;
+            border-collapse: collapse;
             margin-top: 16px;
             font-size: 14px;
         }
 
-        .question-header {
-            font-weight: 700;
-            color: #1a73e8;
+        .questions-table th {
+            background: #1a73e8;
+            color: white;
+            padding: 12px 8px;
+            font-weight: 600;
             text-align: center;
-            background: #e3f2fd;
-            padding: 10px;
-            border-radius: 8px;
+            border: 1px solid #0d47a1;
         }
 
-        .question-cell {
+        .questions-table td {
+            padding: 10px 8px;
             text-align: center;
-            padding: 10px;
-            border-radius: 8px;
-            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
             font-weight: 500;
         }
 
-        .correct {
+        .questions-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .correct-badge {
             background: #c8e6c9;
             color: #2e7d32;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-weight: 700;
+            display: inline-block;
         }
 
-        .incorrect {
+        .incorrect-badge {
             background: #ffcdd2;
             color: #c62828;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-weight: 700;
+            display: inline-block;
         }
 
-        .empty {
+        .empty-badge {
             background: #fff3e0;
             color: #e65100;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-weight: 700;
+            display: inline-block;
         }
 
         .grade {
-            font-size: 42px;
+            font-size: 48px;
             font-weight: 700;
             color: #1a73e8;
             text-align: center;
@@ -282,6 +294,33 @@
             color: #666;
             margin-top: 8px;
             text-align: center;
+            background: #f5f5f5;
+            padding: 8px;
+            border-radius: 8px;
+            font-family: monospace;
+        }
+
+        .pattern-info {
+            background: #e8f0fe;
+            border-left: 4px solid #1a73e8;
+            padding: 12px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .circle-preview {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #1a73e8;
+            margin: 0 2px;
+            vertical-align: middle;
+        }
+
+        .circle-preview.filled {
+            background: #1a73e8;
         }
     </style>
     
@@ -291,11 +330,24 @@
 <body>
     <div class="header">
         <h1>📱 NotaCerta Scanner</h1>
-        <div class="version">Versão 2.1 - Correção Visual</div>
+        <div class="version">Versão 3.0 - Padrão de Gabarito Fixo</div>
     </div>
     
     <div class="container">
         <div id="status" class="status hidden"></div>
+        
+        <div class="pattern-info">
+            <strong>📋 Padrão de Gabarito Detectado:</strong><br>
+            Formato: Linhas numeradas com 5 círculos (A, B, C, D, E)<br>
+            <span id="pattern-example">
+                <span>1</span>
+                <span class="circle-preview"></span>
+                <span class="circle-preview"></span>
+                <span class="circle-preview"></span>
+                <span class="circle-preview"></span>
+                <span class="circle-preview"></span>
+            </span>
+        </div>
         
         <div class="card">
             <div id="video-container">
@@ -304,7 +356,7 @@
             </div>
             
             <button id="start-btn" class="btn">📷 Iniciar Câmera</button>
-            <button id="capture-btn" class="btn secondary hidden">📸 Capturar e Corrigir</button>
+            <button id="capture-btn" class="btn secondary hidden">📸 Capturar e Corrigir Gabarito</button>
         </div>
         
         <div id="qr-info" class="info-card hidden">
@@ -321,14 +373,14 @@
         <div id="password-section" class="input-group hidden">
             <label>🔑 Senha da Prova</label>
             <input type="password" id="password" placeholder="Digite a senha usada no NotaCerta" autocomplete="off">
-            <button id="decrypt-btn" class="btn">🔓 Descriptografar</button>
+            <button id="decrypt-btn" class="btn">🔓 Descriptografar Gabarito</button>
         </div>
         
         <div id="results-section" class="hidden">
             <div class="grade" id="final-grade">0.0</div>
             
             <div class="info-card">
-                <h3 style="color: #1a73e8; margin-bottom: 16px;">📊 Resultado da Correção</h3>
+                <h3 style="color: #1a73e8; margin-bottom: 16px;">📊 Resumo da Correção</h3>
                 
                 <div class="info-row">
                     <span class="info-label">Total de Questões:</span>
@@ -336,27 +388,35 @@
                 </div>
                 <div class="info-row">
                     <span class="info-label">Acertos:</span>
-                    <span id="total-hits" class="info-value"></span>
+                    <span id="total-hits" class="info-value" style="background: #c8e6c9; color: #2e7d32;"></span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Erros:</span>
-                    <span id="total-errors" class="info-value"></span>
+                    <span id="total-errors" class="info-value" style="background: #ffcdd2; color: #c62828;"></span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Em Branco:</span>
-                    <span id="total-blank" class="info-value"></span>
+                    <span id="total-blank" class="info-value" style="background: #fff3e0; color: #e65100;"></span>
                 </div>
             </div>
             
             <div class="info-card">
-                <h3 style="color: #1a73e8; margin-bottom: 16px;">📝 Detalhamento</h3>
-                <div class="question-grid">
-                    <div class="question-header">Questão</div>
-                    <div class="question-header">Gabarito</div>
-                    <div class="question-header">Marcado</div>
-                    <div class="question-header">Resultado</div>
-                    <div id="questions-detail"></div>
-                </div>
+                <h3 style="color: #1a73e8; margin-bottom: 16px;">📝 Detalhamento por Questão</h3>
+                
+                <!-- Tabela corrigida - agora em formato de grid -->
+                <table class="questions-table">
+                    <thead>
+                        <tr>
+                            <th>Questão</th>
+                            <th>Gabarito</th>
+                            <th>Resposta</th>
+                            <th>Resultado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="questions-detail">
+                        <!-- Preenchido via JavaScript -->
+                    </tbody>
+                </table>
             </div>
             
             <div class="button-group">
@@ -366,7 +426,7 @@
         </div>
     </div>
 
-    <canvas id="canvas" width="800" height="600" style="display: none;"></canvas>
+    <canvas id="canvas" width="1280" height="960" style="display: none;"></canvas>
 
     <script>
         // Estado da aplicação
@@ -374,7 +434,6 @@
         let examData = null;
         let decryptedAnswers = null;
         let scanInterval = null;
-        let isScanning = false;
         
         // Elementos DOM
         const video = document.getElementById('video');
@@ -456,64 +515,66 @@
             return /^[0-4]+$/.test(decrypted) ? decrypted : null;
         }
 
-        // Função melhorada para detectar marcações
-        function detectMarkings(imageData, width, height, numQuestions) {
-            console.log('Detectando marcações...');
+        // Função específica para detectar círculos no padrão da imagem
+        function detectCirclesInPattern(imageData, width, height, numQuestions) {
+            console.log('🔍 Detectando círculos no padrão do gabarito...');
             
             const ctx = canvas.getContext('2d');
             ctx.putImageData(imageData, 0, 0);
             
-            // Parâmetros baseados no layout típico
-            const margin = 0.15; // 15% de margem nas bordas
-            const startX = width * margin;
-            const endX = width * (1 - margin);
-            const startY = height * 0.3; // Começa após o cabeçalho
-            const endY = height * 0.9;
+            // Parâmetros baseados no padrão da imagem
+            // O gabarito geralmente ocupa a parte inferior da folha
+            const marginTop = height * 0.45; // 45% do topo (após cabeçalho)
+            const marginBottom = height * 0.9; // 90% do topo
+            const marginLeft = width * 0.15; // 15% da esquerda
+            const marginRight = width * 0.85; // 85% da esquerda
             
-            const cols = 5; // A B C D E
             const rows = Math.min(numQuestions, 15);
+            const cols = 5;
             
-            const cellWidth = (endX - startX) / cols;
-            const cellHeight = (endY - startY) / rows;
+            const cellHeight = (marginBottom - marginTop) / rows;
+            const cellWidth = (marginRight - marginLeft) / cols;
             
-            console.log(`Grid: ${cols}x${rows}, células: ${cellWidth.toFixed(0)}x${cellHeight.toFixed(0)}px`);
+            console.log(`📐 Grid: ${cols}x${rows}, células: ${cellWidth.toFixed(0)}x${cellHeight.toFixed(0)}px`);
             
             const detected = new Array(rows).fill(null);
-            const darknessValues = [];
+            const darknessMatrix = [];
             
-            // Para cada questão
+            // Para cada linha (questão)
             for (let r = 0; r < rows; r++) {
-                const rowY = startY + (r + 0.5) * cellHeight;
-                let maxDarkness = 0;
-                let selectedCol = -1;
-                let colDarkness = [];
+                const centerY = marginTop + (r + 0.5) * cellHeight;
+                const rowDarkness = [];
                 
-                // Para cada alternativa
+                // Para cada coluna (alternativa A-E)
                 for (let c = 0; c < cols; c++) {
-                    const colX = startX + (c + 0.5) * cellWidth;
+                    const centerX = marginLeft + (c + 0.5) * cellWidth;
                     
-                    // Área de análise (30% do tamanho da célula)
-                    const radius = Math.min(cellWidth, cellHeight) * 0.15;
+                    // Raio de busca (proporcional ao tamanho da célula)
+                    const radius = Math.min(cellWidth, cellHeight) * 0.2;
                     
                     let darkPixels = 0;
                     let totalPixels = 0;
                     
                     // Amostra pontos dentro do círculo
-                    for (let dy = -radius; dy <= radius; dy += 3) {
-                        for (let dx = -radius; dx <= radius; dx += 3) {
-                            const x = Math.floor(colX + dx);
-                            const y = Math.floor(rowY + dy);
+                    for (let dy = -radius; dy <= radius; dy += 2) {
+                        for (let dx = -radius; dx <= radius; dx += 2) {
+                            const x = Math.floor(centerX + dx);
+                            const y = Math.floor(centerY + dy);
+                            
+                            // Verifica se está dentro do círculo (distância)
+                            const distance = Math.sqrt(dx*dx + dy*dy);
+                            if (distance > radius) continue;
                             
                             if (x >= 0 && x < width && y >= 0 && y < height) {
                                 const idx = (y * width + x) * 4;
-                                const r = imageData.data[idx];
-                                const g = imageData.data[idx + 1];
-                                const b = imageData.data[idx + 2];
+                                const rVal = imageData.data[idx];
+                                const gVal = imageData.data[idx + 1];
+                                const bVal = imageData.data[idx + 2];
                                 
-                                // Calcula luminância
-                                const luminance = (0.299 * r + 0.587 * g + 0.114 * b);
+                                // Calcula luminância (0-255)
+                                const luminance = 0.299 * rVal + 0.587 * gVal + 0.114 * bVal;
                                 
-                                // Considera escuro se < 128
+                                // Considera preenchido se for escuro (< 128)
                                 if (luminance < 128) {
                                     darkPixels++;
                                 }
@@ -522,30 +583,37 @@
                         }
                     }
                     
-                    const darkness = totalPixels > 0 ? darkPixels / totalPixels : 0;
-                    colDarkness.push(darkness);
-                    
-                    if (darkness > 0.3 && darkness > maxDarkness) {
-                        maxDarkness = darkness;
+                    const darkness = totalPixels > 0 ? (darkPixels / totalPixels) * 100 : 0;
+                    rowDarkness.push(darkness);
+                }
+                
+                darknessMatrix.push(rowDarkness);
+                
+                // Encontra a alternativa mais escura (marcada)
+                let maxDarkness = 0;
+                let selectedCol = -1;
+                
+                for (let c = 0; c < cols; c++) {
+                    if (rowDarkness[c] > 35 && rowDarkness[c] > maxDarkness) { // Threshold de 35%
+                        maxDarkness = rowDarkness[c];
                         selectedCol = c;
                     }
                 }
                 
-                // Log para debug
-                console.log(`Questão ${r + 1}:`, 
-                    colDarkness.map((d, i) => `${String.fromCharCode(65 + i)}:${(d*100).toFixed(0)}%`).join(' | '),
-                    '→', selectedCol >= 0 ? String.fromCharCode(65 + selectedCol) : 'EM BRANCO');
-                
+                // Se encontrou uma marcação clara
                 if (selectedCol >= 0) {
                     detected[r] = String.fromCharCode(65 + selectedCol);
                 } else {
                     detected[r] = '-';
                 }
                 
-                darknessValues.push(colDarkness);
+                // Log para debug
+                console.log(`Questão ${r + 1}:`, 
+                    rowDarkness.map((d, i) => `${String.fromCharCode(65 + i)}:${d.toFixed(1)}%`).join(' | '),
+                    '→', detected[r]);
             }
             
-            return detected;
+            return { detected, darknessMatrix };
         }
 
         // Função para capturar e processar
@@ -555,9 +623,9 @@
                 return;
             }
 
-            showStatus('Processando imagem...', 'info');
+            showStatus('📸 Processando imagem do gabarito...', 'info');
             
-            // Configura canvas
+            // Configura canvas com alta resolução
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
@@ -568,9 +636,9 @@
             // Pega dados da imagem
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             
-            // Detecta marcações
+            // Detecta marcações usando o padrão específico
             const numQuestions = decryptedAnswers.length;
-            const detected = detectMarkings(imageData, canvas.width, canvas.height, numQuestions);
+            const { detected, darknessMatrix } = detectCirclesInPattern(imageData, canvas.width, canvas.height, numQuestions);
             
             // Converte gabarito para letras
             const correctLetters = decryptedAnswers.split('').map(d => 
@@ -598,51 +666,61 @@
             totalErrorsSpan.textContent = `${errors}`;
             totalBlankSpan.textContent = `${blank}`;
             
-            // Preenche detalhamento
-            let detailHtml = '';
+            // Preenche tabela de detalhamento (CORRIGIDO - agora como tabela HTML)
+            let tableRows = '';
             for (let i = 0; i < numQuestions; i++) {
                 const correct = correctLetters[i];
                 const marked = detected[i];
-                let resultClass = '';
+                let badgeClass = '';
                 let resultText = '';
                 
                 if (marked === '-') {
-                    resultClass = 'empty';
-                    resultText = 'Em branco';
+                    badgeClass = 'empty-badge';
+                    resultText = '⚪ Em branco';
                 } else if (marked === correct) {
-                    resultClass = 'correct';
-                    resultText = '✓ Correto';
+                    badgeClass = 'correct-badge';
+                    resultText = '✅ Correto';
                 } else {
-                    resultClass = 'incorrect';
-                    resultText = '✗ Errado';
+                    badgeClass = 'incorrect-badge';
+                    resultText = '❌ Errado';
                 }
                 
-                detailHtml += `
-                    <div class="question-cell">${i + 1}</div>
-                    <div class="question-cell">${correct}</div>
-                    <div class="question-cell">${marked}</div>
-                    <div class="question-cell ${resultClass}">${resultText}</div>
+                tableRows += `
+                    <tr>
+                        <td><strong>${i + 1}</strong></td>
+                        <td><span style="font-weight: 700; color: #1a73e8;">${correct}</span></td>
+                        <td><span style="font-weight: 700;">${marked}</span></td>
+                        <td><span class="${badgeClass}">${resultText}</span></td>
+                    </tr>
                 `;
             }
             
-            questionsDetail.innerHTML = detailHtml;
+            questionsDetail.innerHTML = tableRows;
             
             // Mostra resultados
             resultsSection.classList.remove('hidden');
             captureBtn.classList.add('hidden');
-            showStatus('Correção concluída!', 'success');
+            showStatus('✅ Correção concluída com sucesso!', 'success');
+            
+            // Log resumo
+            console.log('📊 RESUMO DA CORREÇÃO:');
+            console.log(`Total: ${numQuestions} questões`);
+            console.log(`Acertos: ${hits}`);
+            console.log(`Erros: ${errors}`);
+            console.log(`Em branco: ${blank}`);
+            console.log(`Nota: ${grade}`);
         }
 
         // Iniciar câmera
         async function startCamera() {
             try {
-                showStatus('Solicitando acesso à câmera...', 'info');
+                showStatus('📷 Solicitando acesso à câmera...', 'info');
                 
                 videoStream = await navigator.mediaDevices.getUserMedia({
                     video: { 
                         facingMode: 'environment',
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
                     },
                     audio: false
                 });
@@ -654,12 +732,12 @@
                 captureBtn.classList.remove('hidden');
                 captureBtn.disabled = true;
                 
-                showStatus('Câmera pronta. Aponte para o QR Code.', 'success');
+                showStatus('✅ Câmera pronta. Aponte para o QR Code.', 'success');
                 
                 // Inicia escaneamento
                 startQRScan();
             } catch (error) {
-                showStatus('Erro na câmera: ' + error.message, 'error');
+                showStatus('❌ Erro na câmera: ' + error.message, 'error');
             }
         }
 
@@ -690,13 +768,13 @@
                         clearInterval(scanInterval);
                         
                         examIdSpan.textContent = examData.examId;
-                        qrCodeDisplay.textContent = examData.encryptedCode.substring(0, 15) + '...';
+                        qrCodeDisplay.textContent = examData.encryptedCode.substring(0, 10) + '...';
                         
                         qrInfo.classList.remove('hidden');
                         passwordSection.classList.remove('hidden');
                         qrGuide.classList.add('hidden');
                         
-                        showStatus('QR Code detectado! Digite a senha.', 'success');
+                        showStatus('✅ QR Code detectado! Digite a senha.', 'success');
                     }
                 }
             }, 1000);
@@ -709,28 +787,28 @@
             const password = passwordInput.value.trim();
             
             if (!password) {
-                showStatus('Digite a senha!', 'error');
+                showStatus('❌ Digite a senha!', 'error');
                 return;
             }
             
             if (!examData) {
-                showStatus('Escaneie o QR Code primeiro!', 'error');
+                showStatus('❌ Escaneie o QR Code primeiro!', 'error');
                 return;
             }
             
-            showStatus('Descriptografando...', 'info');
+            showStatus('🔓 Descriptografando...', 'info');
             
             const decrypted = decryptCode(examData.encryptedCode, password);
             
             if (!decrypted) {
-                showStatus('Senha incorreta!', 'error');
+                showStatus('❌ Senha incorreta!', 'error');
                 return;
             }
             
             decryptedAnswers = decrypted;
             captureBtn.disabled = false;
             
-            showStatus('Senha correta! Clique em "Capturar e Corrigir".', 'success');
+            showStatus('✅ Senha correta! Clique em "Capturar e Corrigir Gabarito".', 'success');
         });
 
         captureBtn.addEventListener('click', captureAndProcess);
@@ -754,7 +832,7 @@
             captureBtn.disabled = true;
             qrGuide.classList.remove('hidden');
             
-            showStatus('Pronto para novo escaneamento.', 'info');
+            showStatus('🔄 Pronto para novo escaneamento.', 'info');
             
             if (videoStream) {
                 startQRScan();
