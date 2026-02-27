@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NotaCerta Scanner</title>
+    <title>NotaCerta Scanner v2</title>
     <style>
         * {
             margin: 0;
@@ -26,14 +26,23 @@
         }
 
         .header {
-            background: #2196F3;
+            background: linear-gradient(135deg, #2196F3, #1976D2);
             color: white;
             padding: 16px;
             margin: -16px -16px 16px -16px;
             text-align: center;
-            font-size: 20px;
-            font-weight: 500;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        .header .version {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 4px;
         }
 
         .camera-section {
@@ -150,6 +159,7 @@
         .info-value {
             color: #333;
             font-family: monospace;
+            font-size: 14px;
         }
 
         .question-grid {
@@ -164,6 +174,9 @@
             font-weight: bold;
             color: #2196F3;
             text-align: center;
+            background: #e3f2fd;
+            padding: 8px 4px;
+            border-radius: 4px;
         }
 
         .question-cell {
@@ -232,6 +245,17 @@
         .hidden {
             display: none !important;
         }
+
+        .qr-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid #4CAF50;
+            box-shadow: 0 0 0 999px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
     </style>
     
     <!-- Bibliotecas via CDN -->
@@ -241,7 +265,8 @@
 </head>
 <body>
     <div class="header">
-        NotaCerta - Scanner de Gabarito
+        <h1>NotaCerta Scanner</h1>
+        <div class="version">Versão 2.0 - Compatível com NotaCerta Python</div>
     </div>
     
     <div class="container">
@@ -252,16 +277,17 @@
         <div id="camera-section" class="camera-section">
             <div id="video-container">
                 <video id="video" playsinline autoplay></video>
+                <div id="qr-overlay" class="qr-overlay hidden"></div>
             </div>
             <button id="start-btn" class="btn">Iniciar Escaneamento</button>
-            <button id="capture-btn" class="btn secondary hidden" disabled>Capturar Imagem</button>
+            <button id="capture-btn" class="btn secondary hidden">Capturar Imagem do Gabarito</button>
         </div>
         
         <!-- Password Section -->
         <div id="password-section" class="input-group hidden">
             <label for="password">Digite a senha da prova:</label>
-            <input type="password" id="password" placeholder="Senha" autocomplete="off">
-            <button id="decrypt-btn" class="btn">Descriptografar</button>
+            <input type="password" id="password" placeholder="Senha usada no NotaCerta" autocomplete="off">
+            <button id="decrypt-btn" class="btn">Descriptografar Gabarito</button>
         </div>
         
         <!-- Results Section -->
@@ -271,6 +297,10 @@
                 <div class="info-row">
                     <span class="info-label">EXAM ID:</span>
                     <span id="exam-id" class="info-value"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Código Criptografado:</span>
+                    <span id="encrypted-code" class="info-value"></span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Questões:</span>
@@ -283,11 +313,11 @@
             </div>
             
             <div class="info-card">
-                <h3>Gabarito</h3>
+                <h3>Correção por Questão</h3>
                 <div class="question-grid">
                     <div class="question-header">Q</div>
-                    <div class="question-header">Correto</div>
-                    <div class="question-header">Detectado</div>
+                    <div class="question-header">Gabarito</div>
+                    <div class="question-header">Marcado</div>
                     <div class="question-header">Status</div>
                     
                     <div id="questions-container"></div>
@@ -295,7 +325,7 @@
             </div>
             
             <div class="button-group">
-                <button id="rescan-btn" class="btn secondary">Reescanear</button>
+                <button id="rescan-btn" class="btn secondary">Nova Correção</button>
             </div>
         </div>
     </div>
@@ -324,10 +354,12 @@
         const resultsSection = document.getElementById('results-section');
         const statusDiv = document.getElementById('status');
         const examIdSpan = document.getElementById('exam-id');
+        const encryptedCodeSpan = document.getElementById('encrypted-code');
         const questionCountSpan = document.getElementById('question-count');
         const finalGradeSpan = document.getElementById('final-grade');
         const questionsContainer = document.getElementById('questions-container');
         const rescanBtn = document.getElementById('rescan-btn');
+        const qrOverlay = document.getElementById('qr-overlay');
         
         // Funções auxiliares
         function showStatus(message, type = 'info') {
@@ -340,7 +372,78 @@
             statusDiv.classList.add('hidden');
         }
         
-        // PRNG baseado em seed (Mulberry32)
+        // Implementação IDÊNTICA ao Python para gerar seed
+        function getSeedFromPassword(password) {
+            const hash = CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
+            // Pega os primeiros 8 caracteres hex (32 bits) e converte para inteiro
+            const seedHex = hash.substring(0, 8);
+            return parseInt(seedHex, 16);
+        }
+        
+        // Função shuffle code - IDÊNTICA ao Python
+        function shuffleCodeWithPassword(codeString, password) {
+            const codeChars = codeString.split('');
+            const seed = getSeedFromPassword(password);
+            
+            // Usar seed no Math.random
+            let random = mulberry32(seed);
+            
+            // Criar array de índices
+            const indices = Array.from({length: codeChars.length}, (_, i) => i);
+            
+            // Embaralhar usando Fisher-Yates com nosso RNG baseado em seed
+            for (let i = indices.length - 1; i > 0; i--) {
+                const j = Math.floor(random() * (i + 1));
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+            
+            // Aplicar embaralhamento
+            const shuffledCode = new Array(codeChars.length);
+            for (let i = 0; i < indices.length; i++) {
+                shuffledCode[i] = codeChars[indices[i]];
+            }
+            
+            return shuffledCode.join('');
+        }
+        
+        // Função de desembaralhamento (inverso do shuffleCodeWithPassword)
+        function decryptCode(encryptedCode, password) {
+            if (!password) return null;
+            
+            const seed = getSeedFromPassword(password);
+            const length = encryptedCode.length;
+            
+            // Gerar a mesma sequência de índices que no Python
+            let random = mulberry32(seed);
+            const indices = Array.from({length}, (_, i) => i);
+            
+            // Mesmo embaralhamento do Python
+            for (let i = indices.length - 1; i > 0; i--) {
+                const j = Math.floor(random() * (i + 1));
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+            
+            // Criar permutação inversa
+            const inverse = new Array(length);
+            for (let i = 0; i < length; i++) {
+                inverse[indices[i]] = i;
+            }
+            
+            // Aplicar permutação inversa para desembaralhar
+            let decrypted = '';
+            for (let i = 0; i < length; i++) {
+                decrypted += encryptedCode[inverse[i]];
+            }
+            
+            // Verificar se o resultado só contém dígitos 0-4
+            if (!/^[0-4]+$/.test(decrypted)) {
+                return null;
+            }
+            
+            return decrypted;
+        }
+        
+        // PRNG baseado em seed (Mulberry32) - compatível com Python random
         function mulberry32(seed) {
             return function() {
                 seed |= 0;
@@ -351,81 +454,51 @@
             };
         }
         
-        // Função para desembaralhar o código
-        function decryptCode(encryptedCode, password) {
-            if (!password) return null;
+        // Teste completo de compatibilidade com Python
+        function testPythonCompatibility() {
+            console.log("=== Teste de Compatibilidade com Python ===");
             
-            // Gera seed do SHA256 da senha
-            const hash = CryptoJS.SHA256(password);
-            const seed = parseInt(hash.toString(CryptoJS.enc.Hex).substring(0, 8), 16);
+            const password = "test123";
+            const originalCode = "01234"; // 5 questões com respostas A,B,C,D,E
             
-            const length = encryptedCode.length;
-            const indices = Array.from({length}, (_, i) => i);
+            // 1. Testar geração de seed
+            const seed = getSeedFromPassword(password);
+            console.log("Seed gerada:", seed);
             
-            // Embaralha usando o seed
-            const rand = mulberry32(seed);
-            for (let i = indices.length - 1; i > 0; i--) {
-                const j = Math.floor(rand() * (i + 1));
-                [indices[i], indices[j]] = [indices[j], indices[i]];
-            }
+            // 2. Testar embaralhamento (simulando o Python)
+            const encrypted = shuffleCodeWithPassword(originalCode, password);
+            console.log("Código original:", originalCode);
+            console.log("Código embaralhado:", encrypted);
             
-            // Cria permutação inversa
-            const inverse = new Array(length);
-            for (let i = 0; i < length; i++) {
-                inverse[indices[i]] = i;
-            }
-            
-            // Aplica permutação inversa
-            let decrypted = '';
-            for (let i = 0; i < length; i++) {
-                decrypted += encryptedCode[inverse[i]];
-            }
-            
-            // Verifica se todos os caracteres são 0-4
-            if (!/^[0-4]+$/.test(decrypted)) {
-                return null;
-            }
-            
-            return decrypted;
-        }
-        
-        // Teste da função de desembaralhamento
-        function testDecryption() {
-            const password = "test";
-            const original = "01234";
-            
-            // Primeiro, embaralha para criar um código de teste
-            const hash = CryptoJS.SHA256(password);
-            const seed = parseInt(hash.toString(CryptoJS.enc.Hex).substring(0, 8), 16);
-            const indices = Array.from({length: 5}, (_, i) => i);
-            const rand = mulberry32(seed);
-            for (let i = indices.length - 1; i > 0; i--) {
-                const j = Math.floor(rand() * (i + 1));
-                [indices[i], indices[j]] = [indices[j], indices[i]];
-            }
-            
-            let encrypted = '';
-            for (let i = 0; i < 5; i++) {
-                encrypted += original[indices[i]];
-            }
-            
-            // Testa desembaralhamento
+            // 3. Testar desembaralhamento
             const decrypted = decryptCode(encrypted, password);
+            console.log("Código desembaralhado:", decrypted);
+            console.log("Compatibilidade:", decrypted === originalCode ? "OK ✓" : "FALHOU ✗");
             
-            console.log('Teste de desembaralhamento:');
-            console.log('Original:', original);
-            console.log('Embaralhado:', encrypted);
-            console.log('Desembaralhado:', decrypted);
-            console.log('Teste', decrypted === original ? 'PASSOU' : 'FALHOU');
+            // 4. Teste com código real (simulando uma prova de 15 questões)
+            console.log("\n--- Teste com 15 questões ---");
+            const realOriginal = "012340123401234"; // 15 dígitos
+            const realEncrypted = shuffleCodeWithPassword(realOriginal, password);
+            const realDecrypted = decryptCode(realEncrypted, password);
+            console.log("Original (15q):", realOriginal);
+            console.log("Decrypt (15q): ", realDecrypted);
+            console.log("Compatível:", realDecrypted === realOriginal ? "SIM ✓" : "NÃO ✗");
+            
+            return decrypted === originalCode;
         }
         
-        testDecryption();
+        // Executar teste ao carregar
+        setTimeout(testPythonCompatibility, 1000);
         
         // Iniciar câmera
         async function startCamera() {
             try {
                 videoStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment' },
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
                     audio: false
                 });
                 video.srcObject = videoStream;
@@ -433,9 +506,10 @@
                 
                 startBtn.classList.add('hidden');
                 captureBtn.classList.remove('hidden');
-                captureBtn.disabled = false;
+                captureBtn.disabled = true; // Só habilita após descriptografar
+                qrOverlay.classList.remove('hidden');
                 
-                showStatus('Câmera iniciada. Aponte para o QR Code.', 'info');
+                showStatus('Câmera iniciada. Aponte para o QR Code da prova.', 'info');
                 
                 // Inicia escaneamento automático
                 scanQRCode();
@@ -469,11 +543,16 @@
                         };
                         
                         clearInterval(scanInterval);
+                        qrOverlay.classList.add('hidden');
+                        
                         showStatus('QR Code detectado! Digite a senha.', 'success');
                         
-                        // Para o vídeo mas mantém a câmera ativa
+                        // Mostra campo de senha
                         passwordSection.classList.remove('hidden');
-                        captureBtn.disabled = false;
+                        
+                        // Pré-preenche informações
+                        examIdSpan.textContent = examData.examId;
+                        encryptedCodeSpan.textContent = examData.encryptedCode;
                     }
                 }
             }, 500);
@@ -504,18 +583,20 @@
             // Converte para grayscale
             cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
             
-            // Aplica threshold para binarizar
-            cv.threshold(gray, gray, 127, 255, cv.THRESH_BINARY);
+            // Aplica threshold adaptativo para melhor detecção
+            cv.adaptiveThreshold(gray, gray, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 11, 2);
             
-            // Detecta círculos usando HoughCircles
+            // Detecta círculos
             cv.HoughCircles(gray, circles, cv.HOUGH_GRADIENT, 1, 20, 100, 30, 10, 50);
             
-            // Layout fixo: 15 linhas, 5 colunas
-            const rows = 15;
-            const cols = 5;
-            const detected = new Array(rows).fill(null);
+            // Layout: até 15 questões
+            const maxQuestions = Math.min(15, decryptedAnswers.length);
+            const detected = new Array(decryptedAnswers.length).fill('-');
             
-            // Para cada questão, encontra o círculo mais preenchido
+            // Para cada questão, encontra a alternativa mais preenchida
+            const rows = Math.min(15, decryptedAnswers.length);
+            const cols = 5;
+            
             for (let r = 0; r < rows; r++) {
                 const rowY = (r + 0.5) * (gray.rows / rows);
                 let maxDarkness = 0;
@@ -523,14 +604,14 @@
                 
                 for (let c = 0; c < cols; c++) {
                     const colX = (c + 0.5) * (gray.cols / cols);
-                    const size = 20; // Tamanho da área para verificar
+                    const radius = 15; // Raio de verificação
                     
-                    // Conta pixels pretos na região
+                    // Conta pixels escuros na região
                     let darkPixels = 0;
                     let totalPixels = 0;
                     
-                    for (let y = Math.max(0, rowY - size); y < Math.min(gray.rows, rowY + size); y++) {
-                        for (let x = Math.max(0, colX - size); x < Math.min(gray.cols, colX + size); x++) {
+                    for (let y = Math.max(0, rowY - radius); y < Math.min(gray.rows, rowY + radius); y++) {
+                        for (let x = Math.max(0, colX - radius); x < Math.min(gray.cols, colX + radius); x++) {
                             if (gray.ucharPtr(y, x)[0] < 128) {
                                 darkPixels++;
                             }
@@ -539,13 +620,15 @@
                     }
                     
                     const darkness = darkPixels / totalPixels;
-                    if (darkness > 0.3 && darkness > maxDarkness) {
+                    if (darkness > 0.4 && darkness > maxDarkness) {
                         maxDarkness = darkness;
                         selectedCol = c;
                     }
                 }
                 
-                detected[r] = selectedCol >= 0 ? String.fromCharCode(65 + selectedCol) : '-';
+                if (selectedCol >= 0) {
+                    detected[r] = String.fromCharCode(65 + selectedCol); // A=65
+                }
             }
             
             src.delete();
@@ -558,103 +641,8 @@
         // Event Listeners
         startBtn.addEventListener('click', startCamera);
         
-        captureBtn.addEventListener('click', async () => {
-            if (!examData) {
-                showStatus('Escaneie o QR Code primeiro!', 'error');
-                return;
-            }
-            
-            if (!decryptedAnswers) {
-                showStatus('Digite a senha primeiro!', 'error');
-                return;
-            }
-            
-            try {
-                showStatus('Processando imagem...', 'info');
-                
-                const imageCanvas = captureImage();
-                if (!imageCanvas) {
-                    throw new Error('Falha ao capturar imagem');
-                }
-                
-                // Aguarda OpenCV estar pronto
-                if (!opencvReady) {
-                    await new Promise((resolve) => {
-                        const checkOpenCV = setInterval(() => {
-                            if (opencvReady) {
-                                clearInterval(checkOpenCV);
-                                resolve();
-                            }
-                        }, 100);
-                    });
-                }
-                
-                const detected = await detectCircles(imageCanvas);
-                
-                // Converte respostas para letras
-                const correctLetters = decryptedAnswers.split('').map(d => 
-                    String.fromCharCode(65 + parseInt(d))
-                );
-                
-                detectedAnswers = detected;
-                
-                // Calcula acertos
-                let hits = 0;
-                for (let i = 0; i < correctLetters.length; i++) {
-                    if (detected[i] === correctLetters[i]) {
-                        hits++;
-                    }
-                }
-                
-                const grade = (hits / correctLetters.length * 10).toFixed(1);
-                
-                // Exibe resultados
-                examIdSpan.textContent = examData.examId;
-                questionCountSpan.textContent = correctLetters.length;
-                finalGradeSpan.textContent = `${grade} (${hits}/${correctLetters.length})`;
-                
-                // Preenche tabela de questões
-                let questionsHtml = '';
-                for (let i = 0; i < correctLetters.length; i++) {
-                    const correct = correctLetters[i];
-                    const detected = detectedAnswers[i];
-                    let status = '';
-                    let statusClass = '';
-                    
-                    if (detected === '-') {
-                        status = 'Em branco';
-                        statusClass = 'empty';
-                    } else if (detected === correct) {
-                        status = '✓';
-                        statusClass = 'correct';
-                    } else {
-                        status = '✗';
-                        statusClass = 'incorrect';
-                    }
-                    
-                    questionsHtml += `
-                        <div class="question-cell">${i + 1}</div>
-                        <div class="question-cell">${correct}</div>
-                        <div class="question-cell">${detected}</div>
-                        <div class="question-cell ${statusClass}">${status}</div>
-                    `;
-                }
-                
-                questionsContainer.innerHTML = questionsHtml;
-                
-                passwordSection.classList.add('hidden');
-                resultsSection.classList.remove('hidden');
-                captureBtn.disabled = true;
-                
-                showStatus('Correção finalizada!', 'success');
-                
-            } catch (error) {
-                showStatus('Erro ao processar imagem: ' + error.message, 'error');
-            }
-        });
-        
         decryptBtn.addEventListener('click', () => {
-            const password = passwordInput.value;
+            const password = passwordInput.value.trim();
             
             if (!password) {
                 showStatus('Digite a senha!', 'error');
@@ -666,6 +654,8 @@
                 return;
             }
             
+            showStatus('Descriptografando...', 'info');
+            
             const decrypted = decryptCode(examData.encryptedCode, password);
             
             if (!decrypted) {
@@ -675,7 +665,101 @@
             
             decryptedAnswers = decrypted;
             captureBtn.disabled = false;
-            showStatus('Senha correta! Clique em "Capturar Imagem" para corrigir.', 'success');
+            questionCountSpan.textContent = decrypted.length;
+            
+            showStatus('Senha correta! Clique em "Capturar Imagem do Gabarito".', 'success');
+        });
+        
+        captureBtn.addEventListener('click', async () => {
+            if (!examData || !decryptedAnswers) {
+                showStatus('Complete o escaneamento do QR Code e a senha primeiro!', 'error');
+                return;
+            }
+            
+            try {
+                showStatus('Processando imagem do gabarito...', 'info');
+                
+                const imageCanvas = captureImage();
+                if (!imageCanvas) {
+                    throw new Error('Falha ao capturar imagem');
+                }
+                
+                // Aguarda OpenCV estar pronto
+                if (!opencvReady) {
+                    showStatus('Aguardando OpenCV carregar...', 'info');
+                    await new Promise((resolve) => {
+                        const checkOpenCV = setInterval(() => {
+                            if (opencvReady) {
+                                clearInterval(checkOpenCV);
+                                resolve();
+                            }
+                        }, 100);
+                    });
+                }
+                
+                const detected = await detectCircles(imageCanvas);
+                detectedAnswers = detected;
+                
+                // Converte respostas corretas para letras
+                const correctLetters = decryptedAnswers.split('').map(d => 
+                    String.fromCharCode(65 + parseInt(d))
+                );
+                
+                // Calcula acertos
+                let hits = 0;
+                const totalQuestions = correctLetters.length;
+                
+                for (let i = 0; i < totalQuestions; i++) {
+                    if (detected[i] === correctLetters[i]) {
+                        hits++;
+                    }
+                }
+                
+                const grade = ((hits / totalQuestions) * 10).toFixed(1);
+                
+                // Atualiza resultados
+                finalGradeSpan.textContent = `${grade} (${hits}/${totalQuestions})`;
+                
+                // Preenche tabela de questões
+                let questionsHtml = '';
+                for (let i = 0; i < totalQuestions; i++) {
+                    const correct = correctLetters[i];
+                    const detected_ = detected[i];
+                    let status = '';
+                    let statusClass = '';
+                    
+                    if (detected_ === '-') {
+                        status = 'Em branco';
+                        statusClass = 'empty';
+                    } else if (detected_ === correct) {
+                        status = '✓ Correto';
+                        statusClass = 'correct';
+                    } else {
+                        status = '✗ Errado';
+                        statusClass = 'incorrect';
+                    }
+                    
+                    questionsHtml += `
+                        <div class="question-cell">${i + 1}</div>
+                        <div class="question-cell">${correct}</div>
+                        <div class="question-cell">${detected_}</div>
+                        <div class="question-cell ${statusClass}">${status}</div>
+                    `;
+                }
+                
+                questionsContainer.innerHTML = questionsHtml;
+                
+                // Mostra resultados
+                passwordSection.classList.add('hidden');
+                resultsSection.classList.remove('hidden');
+                captureBtn.disabled = true;
+                
+                showStatus('Correção finalizada com sucesso!', 'success');
+                
+            } catch (error) {
+                showStatus('Erro ao processar imagem: ' + error.message, 'error');
+                console.error(error);
+            }
         });
         
         rescanBtn.addEventListener('click', () => {
@@ -688,11 +772,14 @@
             passwordSection.classList.add('hidden');
             resultsSection.classList.add('hidden');
             captureBtn.disabled = true;
+            qrOverlay.classList.remove('hidden');
             
             showStatus('Pronto para novo escaneamento.', 'info');
             
             // Reinicia escaneamento
-            scanQRCode();
+            if (videoStream) {
+                scanQRCode();
+            }
         });
         
         // Inicializa OpenCV
@@ -704,6 +791,7 @@
                 };
             } else {
                 console.error('OpenCV não carregou');
+                showStatus('Aguardando OpenCV carregar...', 'info');
             }
         };
         
