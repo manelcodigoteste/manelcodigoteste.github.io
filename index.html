@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NotaCerta Scanner v4.0</title>
+    <title>NotaCerta Scanner v5.0 - Correção Oficial</title>
     <style>
         * {
             margin: 0;
@@ -12,86 +12,66 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #f0f2f5;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            background: #f8f9fa;
             min-height: 100vh;
+            color: #1e293b;
         }
 
         .header {
-            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            background: linear-gradient(135deg, #2563eb, #1e40af);
             color: white;
-            padding: 15px;
+            padding: 20px;
             text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
         .header h1 {
-            font-size: 24px;
-            font-weight: 500;
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .header .sub {
+            font-size: 14px;
+            opacity: 0.9;
+            font-weight: 400;
         }
 
         .header .version {
             font-size: 12px;
-            opacity: 0.9;
-            margin-top: 4px;
+            background: rgba(255,255,255,0.2);
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 30px;
+            margin-top: 8px;
         }
 
         .container {
-            padding: 12px;
+            padding: 16px;
             max-width: 600px;
             margin: 0 auto;
         }
 
-        .password-bar {
+        /* Cards */
+        .card {
             background: white;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            display: flex;
-            gap: 10px;
-            align-items: center;
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.04);
         }
 
-        .password-bar input {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-
-        .password-bar button {
-            background: #1a73e8;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .password-bar button:disabled {
-            background: #b0bec5;
-            cursor: not-allowed;
-        }
-
-        .camera-card {
-            background: white;
-            border-radius: 16px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        #video-container {
-            position: relative;
-            width: 100%;
-            background: #000;
-            border-radius: 12px;
+        .camera-container {
+            background: #0f172a;
+            border-radius: 20px;
             overflow: hidden;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
+            position: relative;
             aspect-ratio: 4/3;
+            border: 3px solid #2563eb;
         }
 
         #video {
@@ -109,327 +89,479 @@
             pointer-events: none;
         }
 
-        .qr-area {
+        .gabarito-frame {
             position: absolute;
-            top: 10%;
+            top: 12%;
             left: 5%;
-            width: 40%;
-            height: 40%;
-            border: 3px dashed #4caf50;
-            border-radius: 10px;
-            background: rgba(76, 175, 80, 0.1);
-        }
-
-        .gabarito-area {
-            position: absolute;
-            top: 10%;
-            right: 5%;
-            width: 45%;
+            width: 90%;
             height: 70%;
-            border: 3px dashed #f44336;
-            border-radius: 10px;
-            background: rgba(244, 67, 54, 0.1);
+            border: 3px dashed #22c55e;
+            border-radius: 16px;
+            background: rgba(34, 197, 94, 0.08);
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+            animation: pulse 2s infinite;
         }
 
-        .area-label {
+        .qr-indicator {
             position: absolute;
-            background: white;
-            padding: 4px 8px;
-            border-radius: 4px;
+            top: 8px;
+            left: 8px;
+            background: #2563eb;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 30px;
             font-size: 12px;
-            font-weight: bold;
+            font-weight: 600;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
-        .qr-label {
-            top: 5%;
-            left: 5%;
-            color: #4caf50;
+        .gabarito-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #22c55e;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
-        .gabarito-label {
-            top: 5%;
-            right: 5%;
-            color: #f44336;
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
         }
 
         .btn {
-            background: #1a73e8;
+            background: #2563eb;
             color: white;
             border: none;
-            padding: 14px 20px;
-            border-radius: 10px;
-            font-size: 16px;
+            padding: 18px 24px;
+            border-radius: 50px;
+            font-size: 18px;
             font-weight: 600;
             width: 100%;
+            margin-bottom: 12px;
             cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+            background: #1e40af;
         }
 
         .btn.secondary {
-            background: #546e7a;
+            background: #475569;
+            box-shadow: none;
         }
 
-        .status {
-            text-align: center;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            font-weight: 500;
+        .btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .input-group {
+            background: white;
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #1e293b;
+            font-weight: 600;
             font-size: 14px;
         }
 
-        .status.success {
-            background: #c8e6c9;
-            color: #2e7d32;
-        }
-
-        .status.error {
-            background: #ffcdd2;
-            color: #c62828;
-        }
-
-        .status.info {
-            background: #e3f2fd;
-            color: #0d47a1;
-        }
-
-        .results-card {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            margin-top: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .grade-big {
-            font-size: 48px;
-            font-weight: bold;
-            color: #1a73e8;
-            text-align: center;
-            padding: 15px;
-            background: #e3f2fd;
+        .input-group input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
             border-radius: 12px;
-            margin-bottom: 15px;
+            font-size: 16px;
+            transition: all 0.2s;
+            background: #f8fafc;
         }
 
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 20px;
+        .input-group input:focus {
+            outline: none;
+            border-color: #2563eb;
+            background: white;
+        }
+
+        .status-badge {
             text-align: center;
+            padding: 14px;
+            border-radius: 50px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            font-size: 14px;
+            background: #f1f5f9;
+            color: #1e293b;
+            border-left: 6px solid #2563eb;
         }
 
-        .stat-item {
-            flex: 1;
+        .status-badge.success {
+            background: #dcfce7;
+            color: #166534;
+            border-left-color: #22c55e;
         }
 
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
+        .status-badge.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left-color: #ef4444;
         }
 
-        .stat-label {
+        .status-badge.warning {
+            background: #fef9c3;
+            color: #854d0e;
+            border-left-color: #eab308;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .result-card {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .result-value {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 4px;
+        }
+
+        .result-label {
             font-size: 12px;
-            color: #666;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .hits { color: #2e7d32; }
-        .errors { color: #c62828; }
-        .blank { color: #e65100; }
+        .hits { color: #16a34a; }
+        .errors { color: #dc2626; }
+        .blank { color: #b45309; }
+
+        .grade-circle {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            color: white;
+            border-radius: 50px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .grade-number {
+            font-size: 56px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .grade-label {
+            font-size: 14px;
+            opacity: 0.9;
+            letter-spacing: 1px;
+        }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 14px;
+            margin-top: 16px;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
 
         th {
-            background: #1a73e8;
+            background: #2563eb;
             color: white;
-            padding: 10px;
+            padding: 14px 8px;
             font-weight: 600;
+            font-size: 14px;
         }
 
         td {
-            padding: 10px;
+            padding: 12px 8px;
             text-align: center;
-            border: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 500;
         }
 
-        tr:nth-child(even) {
-            background: #f8f9fa;
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .correct-row {
+            background: #f0fdf4;
+        }
+
+        .incorrect-row {
+            background: #fef2f2;
         }
 
         .badge {
             display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
+            padding: 4px 12px;
+            border-radius: 50px;
             font-weight: 600;
             font-size: 12px;
         }
 
         .badge.correct {
-            background: #c8e6c9;
-            color: #2e7d32;
+            background: #dcfce7;
+            color: #166534;
         }
 
         .badge.incorrect {
-            background: #ffcdd2;
-            color: #c62828;
+            background: #fee2e2;
+            color: #991b1b;
         }
 
         .badge.empty {
-            background: #fff3e0;
-            color: #e65100;
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .debug-panel {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 12px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 11px;
+            margin-top: 16px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
         }
 
         .hidden {
             display: none !important;
         }
 
-        .password-set {
-            background: #c8e6c9;
-            color: #2e7d32;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
+        .flex {
+            display: flex;
+            gap: 10px;
         }
 
-        .debug-info {
-            font-size: 11px;
-            color: #666;
-            margin-top: 10px;
-            padding: 8px;
-            background: #f5f5f5;
-            border-radius: 4px;
-            font-family: monospace;
-            white-space: pre-wrap;
+        .mt-4 {
+            margin-top: 16px;
         }
     </style>
     
+    <!-- Bibliotecas via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.js"></script>
+    <script src="https://docs.opencv.org/4.8.0/opencv.js" async></script>
 </head>
 <body>
     <div class="header">
         <h1>📱 NotaCerta Scanner</h1>
-        <div class="version">Versão 4.0 - Leitura Automática</div>
+        <div class="sub">Sistema Oficial de Correção</div>
+        <div class="version">Versão 5.0 - Layout A4</div>
     </div>
     
     <div class="container">
-        <!-- Barra de senha (fixa no topo) -->
-        <div class="password-bar">
-            <input type="password" id="global-password" placeholder="🔑 Digite a senha da prova (uma vez)">
-            <button id="set-password-btn">Salvar</button>
+        <!-- Status principal -->
+        <div id="main-status" class="status-badge">
+            ⏳ Pronto para iniciar
         </div>
         
-        <div id="password-status" class="status hidden"></div>
+        <!-- Área da câmera -->
+        <div class="camera-container">
+            <video id="video" playsinline autoplay></video>
+            <div class="overlay-guide">
+                <div class="gabarito-frame"></div>
+                <span class="qr-indicator" id="qr-indicator">📷 QR Code</span>
+                <span class="gabarito-indicator" id="gabarito-indicator">📋 Gabarito</span>
+            </div>
+        </div>
         
-        <!-- Câmera -->
-        <div class="camera-card">
-            <div id="video-container">
-                <video id="video" playsinline autoplay></video>
-                <div class="overlay-guide">
-                    <div class="qr-area"></div>
-                    <div class="gabarito-area"></div>
-                    <span class="area-label qr-label">📷 QR Code</span>
-                    <span class="area-label gabarito-label">📋 Gabarito</span>
+        <!-- Controles principais -->
+        <div class="card">
+            <button id="btn-start-camera" class="btn">
+                <span>📸</span> Iniciar Câmera
+            </button>
+            
+            <div id="password-area" class="hidden">
+                <div class="input-group">
+                    <label>🔑 Senha da Prova</label>
+                    <input type="password" id="password-input" placeholder="Digite a senha..." autocomplete="off">
+                    <button id="btn-confirm-password" class="btn" style="margin-top: 12px;">
+                        ✅ Confirmar Senha
+                    </button>
                 </div>
             </div>
             
-            <button id="start-camera" class="btn">📷 Iniciar Câmera</button>
-            <button id="stop-camera" class="btn secondary hidden">⏹️ Parar</button>
+            <div id="capture-area" class="hidden">
+                <button id="btn-capture" class="btn">
+                    <span>📸</span> Capturar e Corrigir Gabarito
+                </button>
+            </div>
+            
+            <button id="btn-stop-camera" class="btn secondary hidden">
+                ⏹️ Parar Câmera
+            </button>
         </div>
         
-        <!-- Status em tempo real -->
-        <div id="realtime-status" class="status info hidden"></div>
+        <!-- Informações do QR Code -->
+        <div id="qr-info" class="card hidden">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="font-weight: 600;">📋 EXAM ID:</span>
+                <span id="exam-id" style="font-family: monospace; background: #f1f5f9; padding: 4px 12px; border-radius: 30px;"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="font-weight: 600;">🔐 Código:</span>
+                <span id="encrypted-code" style="font-family: monospace; background: #f1f5f9; padding: 4px 12px; border-radius: 30px;"></span>
+            </div>
+        </div>
         
         <!-- Resultados -->
-        <div id="results" class="results-card hidden">
-            <div class="grade-big" id="grade">0.0</div>
+        <div id="results-area" class="hidden">
+            <div class="grade-circle">
+                <div class="grade-number" id="final-grade">0.0</div>
+                <div class="grade-label">NOTA FINAL</div>
+            </div>
             
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-value hits" id="hits-count">0</div>
-                    <div class="stat-label">Acertos</div>
+            <div class="results-grid">
+                <div class="result-card">
+                    <div class="result-value hits" id="hits-count">0</div>
+                    <div class="result-label">ACERTOS</div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value errors" id="errors-count">0</div>
-                    <div class="stat-label">Erros</div>
+                <div class="result-card">
+                    <div class="result-value errors" id="errors-count">0</div>
+                    <div class="result-label">ERROS</div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value blank" id="blank-count">0</div>
-                    <div class="stat-label">Branco</div>
+                <div class="result-card">
+                    <div class="result-value blank" id="blank-count">0</div>
+                    <div class="result-label">BRANCO</div>
                 </div>
             </div>
             
-            <h3 style="margin-bottom: 10px; color: #1a73e8;">📝 Detalhamento</h3>
+            <div style="background: white; border-radius: 20px; padding: 16px; margin-top: 16px;">
+                <h3 style="margin-bottom: 16px; color: #2563eb;">📝 Detalhamento</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Q</th>
+                            <th>Gabarito</th>
+                            <th>Resposta</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="details-table-body"></tbody>
+                </table>
+            </div>
             
-            <table>
-                <thead>
-                    <tr>
-                        <th>Q</th>
-                        <th>Gabarito</th>
-                        <th>Resposta</th>
-                        <th>Resultado</th>
-                    </tr>
-                </thead>
-                <tbody id="details-table">
-                    <!-- Preenchido via JS -->
-                </tbody>
-            </table>
-            
-            <button id="new-scan" class="btn" style="margin-top: 15px;">🔄 Nova Leitura</button>
+            <div class="flex mt-4">
+                <button id="btn-new-scan" class="btn secondary" style="flex: 1;">🔄 Nova Prova</button>
+                <button id="btn-capture-again" class="btn" style="flex: 1;">📸 Recapturar</button>
+            </div>
+        </div>
+        
+        <!-- Painel de debug (opcional) -->
+        <div id="debug-panel" class="debug-panel hidden">
+            <div id="debug-content"></div>
         </div>
     </div>
 
-    <canvas id="canvas" width="1280" height="960" style="display: none;"></canvas>
+    <canvas id="canvas" style="display: none;"></canvas>
+    <canvas id="opencv-canvas" style="display: none;"></canvas>
 
     <script>
-        // Estado global
-        let globalPassword = null;
-        let videoStream = null;
-        let examData = null;
-        let decryptedAnswers = null;
-        let scanInterval = null;
-        let autoProcessInterval = null;
-        let lastProcessedQR = null;
+        // ============================================
+        // ESTADO GLOBAL DA APLICAÇÃO
+        // ============================================
+        let state = {
+            videoStream: null,
+            globalPassword: null,
+            examData: null,
+            decryptedAnswers: null,
+            opencvReady: false,
+            isScanning: false,
+            scanInterval: null
+        };
         
         // Elementos DOM
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
-        const globalPasswordInput = document.getElementById('global-password');
-        const setPasswordBtn = document.getElementById('set-password-btn');
-        const passwordStatus = document.getElementById('password-status');
-        const startCameraBtn = document.getElementById('start-camera');
-        const stopCameraBtn = document.getElementById('stop-camera');
-        const realtimeStatus = document.getElementById('realtime-status');
-        const resultsDiv = document.getElementById('results');
-        const gradeSpan = document.getElementById('grade');
+        const opencvCanvas = document.getElementById('opencv-canvas');
+        const mainStatus = document.getElementById('main-status');
+        const btnStartCamera = document.getElementById('btn-start-camera');
+        const btnStopCamera = document.getElementById('btn-stop-camera');
+        const passwordArea = document.getElementById('password-area');
+        const captureArea = document.getElementById('capture-area');
+        const passwordInput = document.getElementById('password-input');
+        const btnConfirmPassword = document.getElementById('btn-confirm-password');
+        const btnCapture = document.getElementById('btn-capture');
+        const qrInfo = document.getElementById('qr-info');
+        const examIdSpan = document.getElementById('exam-id');
+        const encryptedCodeSpan = document.getElementById('encrypted-code');
+        const resultsArea = document.getElementById('results-area');
+        const finalGrade = document.getElementById('final-grade');
         const hitsCount = document.getElementById('hits-count');
         const errorsCount = document.getElementById('errors-count');
         const blankCount = document.getElementById('blank-count');
-        const detailsTable = document.getElementById('details-table');
-        const newScanBtn = document.getElementById('new-scan');
+        const detailsTableBody = document.getElementById('details-table-body');
+        const btnNewScan = document.getElementById('btn-new-scan');
+        const btnCaptureAgain = document.getElementById('btn-capture-again');
+        const qrIndicator = document.getElementById('qr-indicator');
+        const gabaritoIndicator = document.getElementById('gabarito-indicator');
+        const debugPanel = document.getElementById('debug-panel');
+        const debugContent = document.getElementById('debug-content');
 
-        // Funções de utilidade
-        function showRealtimeStatus(msg, type = 'info') {
-            realtimeStatus.textContent = msg;
-            realtimeStatus.className = `status ${type}`;
-            realtimeStatus.classList.remove('hidden');
+        // ============================================
+        // FUNÇÕES DE UTILIDADE
+        // ============================================
+        function setStatus(msg, type = 'info') {
+            mainStatus.textContent = msg;
+            mainStatus.className = `status-badge ${type}`;
         }
 
-        function hideRealtimeStatus() {
-            realtimeStatus.classList.add('hidden');
+        function debug(msg) {
+            console.log(msg);
+            debugContent.innerHTML = new Date().toLocaleTimeString() + ': ' + msg + '<br>' + debugContent.innerHTML;
         }
 
-        // Funções de criptografia (compatíveis com Python)
+        // ============================================
+        // CRIPTOGRAFIA (COMPATÍVEL COM PYTHON)
+        // ============================================
         function getSeedFromPassword(password) {
+            // SHA256 da senha - igual ao Python
             const hash = CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
-            return parseInt(hash.substring(0, 8), 16);
+            // Pega primeiros 8 caracteres hex (32 bits) para seed
+            const seedHex = hash.substring(0, 8);
+            return parseInt(seedHex, 16);
         }
 
+        // PRNG Mulberry32 - compatível com random do Python
         function mulberry32(seed) {
             return function() {
                 seed |= 0;
@@ -440,250 +572,352 @@
             };
         }
 
+        // Desembaralha o código - EXATAMENTE como o Python
         function decryptCode(encryptedCode, password) {
             if (!password) return null;
             
             const seed = getSeedFromPassword(password);
-            const length = encryptedCode.length;
+            const n = encryptedCode.length;
             
-            const indices = Array.from({length}, (_, i) => i);
+            // Gera índices e embaralha (igual ao Python)
+            const indices = Array.from({length: n}, (_, i) => i);
             const rand = mulberry32(seed);
             
+            // Fisher-Yates shuffle
             for (let i = indices.length - 1; i > 0; i--) {
                 const j = Math.floor(rand() * (i + 1));
                 [indices[i], indices[j]] = [indices[j], indices[i]];
             }
             
-            const inverse = new Array(length);
-            for (let i = 0; i < length; i++) {
+            // Cria permutação inversa
+            const inverse = new Array(n);
+            for (let i = 0; i < n; i++) {
                 inverse[indices[i]] = i;
             }
             
+            // Aplica inversa
             let decrypted = '';
-            for (let i = 0; i < length; i++) {
+            for (let i = 0; i < n; i++) {
                 decrypted += encryptedCode[inverse[i]];
             }
             
+            // Verifica se é válido (só dígitos 0-4)
             return /^[0-4]+$/.test(decrypted) ? decrypted : null;
         }
 
-        // Função para detectar marcações no gabarito (baseada no layout da imagem)
-        function detectMarkings(imageData, width, height, numQuestions) {
-            console.log('🔍 Analisando gabarito...');
+        // ============================================
+        // DETECÇÃO DE CÍRCULOS COM OPENCV
+        // ============================================
+        async function detectCirclesWithOpenCV(imageData, width, height, numQuestions) {
+            if (!state.opencvReady) {
+                throw new Error('OpenCV não está pronto');
+            }
+
+            debug('🔍 Iniciando detecção de círculos...');
             
-            const ctx = canvas.getContext('2d');
-            ctx.putImageData(imageData, 0, 0);
+            const src = cv.matFromImageData(imageData);
+            const gray = new cv.Mat();
+            const binary = new cv.Mat();
+            const circles = new cv.Mat();
             
-            // Layout baseado na imagem anexada:
-            // - QR Code à esquerda
-            // - Gabarito à direita com A B C D E em cima
-            // - Círculos numerados de 1 até N
-            
-            // Área do gabarito (45% a 95% da largura, 15% a 85% da altura)
-            const gabStartX = width * 0.45;
-            const gabEndX = width * 0.95;
-            const gabStartY = height * 0.15;
-            const gabEndY = height * 0.85;
-            
-            // Grid do gabarito
-            const rows = Math.min(numQuestions, 15);
-            const cols = 5; // A, B, C, D, E
-            
-            const cellWidth = (gabEndX - gabStartX) / cols;
-            const cellHeight = (gabEndY - gabStartY) / rows;
-            
-            console.log(`Grid: ${cols}x${rows}, célula: ${cellWidth.toFixed(0)}x${cellHeight.toFixed(0)}px`);
-            
-            const detected = new Array(rows).fill('-');
-            const debug = [];
-            
-            for (let r = 0; r < rows; r++) {
-                const centerY = gabStartY + (r + 0.5) * cellHeight;
-                const rowValues = [];
+            try {
+                // Converte para grayscale
+                cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
                 
-                for (let c = 0; c < cols; c++) {
-                    const centerX = gabStartX + (c + 0.5) * cellWidth;
-                    const radius = Math.min(cellWidth, cellHeight) * 0.15;
+                // Aplica blur para reduzir ruído
+                cv.GaussianBlur(gray, gray, new cv.Size(5, 5), 0);
+                
+                // Threshold adaptativo para binarizar
+                cv.adaptiveThreshold(gray, binary, 255, 
+                    cv.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                    cv.THRESH_BINARY_INV, 15, 5);
+                
+                // Detecta círculos com HoughCircles
+                // Parâmetros ajustados para o layout A4
+                cv.HoughCircles(gray, circles, cv.HOUGH_GRADIENT, 1.3, 30, 100, 35, 10, 30);
+                
+                // Layout esperado: 5 colunas × até 20 linhas
+                const cols = 5;
+                const rows = Math.min(numQuestions, 20);
+                
+                // Extrai centros dos círculos detectados
+                const centers = [];
+                for (let i = 0; i < circles.cols; i++) {
+                    const x = circles.data32F[i * 3];
+                    const y = circles.data32F[i * 3 + 1];
+                    const r = circles.data32F[i * 3 + 2];
+                    centers.push({x, y, r});
+                }
+                
+                debug(`Detectados ${centers.length} círculos`);
+                
+                // Organiza por linhas (baseado em coordenada Y)
+                centers.sort((a, b) => a.y - b.y);
+                
+                // Agrupa em linhas (tolerância vertical)
+                const rows_centers = [];
+                let currentRow = [];
+                let lastY = centers[0]?.y || 0;
+                
+                for (const c of centers) {
+                    if (Math.abs(c.y - lastY) < 20) {
+                        currentRow.push(c);
+                    } else {
+                        if (currentRow.length > 0) {
+                            // Ordena por X dentro da linha
+                            currentRow.sort((a, b) => a.x - b.x);
+                            rows_centers.push(currentRow);
+                        }
+                        currentRow = [c];
+                        lastY = c.y;
+                    }
+                }
+                if (currentRow.length > 0) {
+                    currentRow.sort((a, b) => a.x - b.x);
+                    rows_centers.push(currentRow);
+                }
+                
+                debug(`Agrupados em ${rows_centers.length} linhas`);
+                
+                // Detecta marcações
+                const detected = new Array(rows).fill('-');
+                
+                for (let r = 0; r < Math.min(rows, rows_centers.length); r++) {
+                    const row = rows_centers[r];
+                    if (row.length < 3) continue; // Linha inválida
                     
-                    let darkPixels = 0;
-                    let totalPixels = 0;
+                    // Para cada alternativa, verifica preenchimento
+                    const darknessValues = [];
                     
-                    // Analisa pixels dentro do círculo
-                    for (let dy = -radius; dy <= radius; dy += 2) {
-                        for (let dx = -radius; dx <= radius; dx += 2) {
-                            const distance = Math.sqrt(dx*dx + dy*dy);
-                            if (distance > radius) continue;
-                            
-                            const x = Math.floor(centerX + dx);
-                            const y = Math.floor(centerY + dy);
-                            
-                            if (x >= 0 && x < width && y >= 0 && y < height) {
-                                const idx = (y * width + x) * 4;
-                                const rVal = imageData.data[idx];
-                                const gVal = imageData.data[idx + 1];
-                                const bVal = imageData.data[idx + 2];
-                                
-                                const luminance = 0.299 * rVal + 0.587 * gVal + 0.114 * bVal;
-                                if (luminance < 100) { // Mais sensível
-                                    darkPixels++;
-                                }
-                                totalPixels++;
-                            }
+                    for (let c = 0; c < cols; c++) {
+                        if (c >= row.length) {
+                            darknessValues.push(0);
+                            continue;
+                        }
+                        
+                        const center = row[c];
+                        
+                        // ROI ao redor do círculo
+                        const roiX = Math.max(0, Math.floor(center.x - center.r));
+                        const roiY = Math.max(0, Math.floor(center.y - center.r));
+                        const roiWidth = Math.min(width - roiX, Math.floor(center.r * 2));
+                        const roiHeight = Math.min(height - roiY, Math.floor(center.r * 2));
+                        
+                        if (roiWidth <= 0 || roiHeight <= 0) {
+                            darknessValues.push(0);
+                            continue;
+                        }
+                        
+                        // Extrai ROI
+                        const rect = new cv.Rect(roiX, roiY, roiWidth, roiHeight);
+                        const roi = binary.roi(rect);
+                        
+                        // Conta pixels brancos (marcados)
+                        const whitePixels = cv.countNonZero(roi);
+                        const totalPixels = roiWidth * roiHeight;
+                        const darkness = (whitePixels / totalPixels) * 100;
+                        
+                        darknessValues.push(darkness);
+                        roi.delete();
+                    }
+                    
+                    // Encontra alternativa mais escura (>35% preenchido)
+                    let maxDarkness = 0;
+                    let selectedCol = -1;
+                    
+                    for (let c = 0; c < cols; c++) {
+                        if (darknessValues[c] > 35 && darknessValues[c] > maxDarkness) {
+                            maxDarkness = darknessValues[c];
+                            selectedCol = c;
                         }
                     }
                     
-                    const darkness = totalPixels > 0 ? (darkPixels / totalPixels) * 100 : 0;
-                    rowValues.push(darkness);
-                }
-                
-                // Encontra a alternativa mais escura (marcada)
-                let maxDarkness = 0;
-                let selectedCol = -1;
-                
-                for (let c = 0; c < cols; c++) {
-                    if (rowValues[c] > 25 && rowValues[c] > maxDarkness) { // Threshold 25%
-                        maxDarkness = rowValues[c];
-                        selectedCol = c;
+                    if (selectedCol >= 0) {
+                        detected[r] = String.fromCharCode(65 + selectedCol);
                     }
+                    
+                    debug(`Q${r+1}: ` + darknessValues.map((v,i) => 
+                        `${String.fromCharCode(65+i)}:${v.toFixed(1)}%`).join(' ') + 
+                        ` → ${detected[r]}`);
                 }
                 
-                if (selectedCol >= 0) {
-                    detected[r] = String.fromCharCode(65 + selectedCol);
-                }
+                return detected;
                 
-                debug.push(`Q${r+1}: ` + rowValues.map((v, i) => 
-                    `${String.fromCharCode(65+i)}:${v.toFixed(1)}%`).join(' ') + 
-                    ` → ${detected[r]}`);
+            } finally {
+                // Libera memória
+                src.delete();
+                gray.delete();
+                binary.delete();
+                circles.delete();
             }
-            
-            console.log(debug.join('\n'));
-            return detected;
         }
 
-        // Função principal de processamento
-        async function processFrame() {
-            if (!video.videoWidth || !globalPassword) return;
+        // ============================================
+        // SCAN AUTOMÁTICO DE QR CODE
+        // ============================================
+        function startQRScan() {
+            if (state.scanInterval) clearInterval(state.scanInterval);
             
-            // Captura frame
+            state.scanInterval = setInterval(() => {
+                if (!video.videoWidth || state.examData) return;
+                
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = video.videoWidth;
+                tempCanvas.height = video.videoHeight;
+                const ctx = tempCanvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+                
+                const imageData = ctx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                const code = jsQR(imageData.data, tempCanvas.width, tempCanvas.height);
+                
+                if (code) {
+                    const parts = code.data.split(':');
+                    if (parts.length === 2 && parts[1].length > 0) {
+                        // QR Code válido encontrado
+                        state.examData = {
+                            examId: parts[0],
+                            encryptedCode: parts[1]
+                        };
+                        
+                        // Atualiza UI
+                        examIdSpan.textContent = state.examData.examId;
+                        encryptedCodeSpan.textContent = state.examData.encryptedCode.substring(0, 10) + '...';
+                        qrInfo.classList.remove('hidden');
+                        
+                        // Se já tem senha, tenta descriptografar automaticamente
+                        if (state.globalPassword) {
+                            const decrypted = decryptCode(state.examData.encryptedCode, state.globalPassword);
+                            if (decrypted) {
+                                state.decryptedAnswers = decrypted;
+                                setStatus(`✅ QR lido! ${decrypted.length} questões. Posicione o gabarito.`, 'success');
+                                captureArea.classList.remove('hidden');
+                                qrIndicator.style.background = '#22c55e';
+                            } else {
+                                setStatus('⚠️ QR lido, mas senha parece incorreta', 'warning');
+                                passwordArea.classList.remove('hidden');
+                            }
+                        } else {
+                            setStatus('✅ QR Code detectado! Digite a senha.', 'success');
+                            passwordArea.classList.remove('hidden');
+                        }
+                        
+                        clearInterval(state.scanInterval);
+                    }
+                }
+            }, 500);
+        }
+
+        // ============================================
+        // CAPTURA E CORREÇÃO
+        // ============================================
+        async function captureAndCorrect() {
+            if (!state.decryptedAnswers) {
+                setStatus('❌ Nenhum gabarito descriptografado', 'error');
+                return;
+            }
+            
+            setStatus('📸 Capturando imagem...', 'info');
+            
+            // Captura frame atual
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
+            // Pega dados da imagem
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             
-            // 1. Procura QR Code (apenas se não tiver dados ainda)
-            if (!examData) {
-                const code = jsQR(imageData.data, canvas.width, canvas.height);
+            try {
+                setStatus('🔍 Analisando gabarito...', 'info');
                 
-                if (code) {
-                    const parts = code.data.split(':');
-                    if (parts.length === 2 && parts[1].length > 0) {
-                        examData = {
-                            examId: parts[0],
-                            encryptedCode: parts[1]
-                        };
-                        
-                        showRealtimeStatus(`✅ QR detectado! ID: ${examData.examId}`, 'success');
-                        
-                        // Descriptografa automaticamente
-                        decryptedAnswers = decryptCode(examData.encryptedCode, globalPassword);
-                        
-                        if (decryptedAnswers) {
-                            showRealtimeStatus(`🔓 Gabarito descriptografado! ${decryptedAnswers.length} questões`, 'success');
-                        } else {
-                            showRealtimeStatus('❌ Erro ao descriptografar! Senha incorreta?', 'error');
-                            examData = null;
-                        }
+                // Detecta círculos
+                const detected = await detectCirclesWithOpenCV(
+                    imageData, 
+                    canvas.width, 
+                    canvas.height, 
+                    state.decryptedAnswers.length
+                );
+                
+                // Converte gabarito correto
+                const correctLetters = state.decryptedAnswers.split('').map(d => 
+                    String.fromCharCode(65 + parseInt(d))
+                );
+                
+                // Calcula resultados
+                let hits = 0, errors = 0, blank = 0;
+                for (let i = 0; i < correctLetters.length; i++) {
+                    if (detected[i] === '-') {
+                        blank++;
+                    } else if (detected[i] === correctLetters[i]) {
+                        hits++;
+                    } else {
+                        errors++;
                     }
                 }
-            }
-            
-            // 2. Se tem dados descriptografados, procura o gabarito
-            if (examData && decryptedAnswers) {
-                // Área do gabarito (procura pelas marcações)
-                const detected = detectMarkings(imageData, canvas.width, canvas.height, decryptedAnswers.length);
                 
-                // Verifica se detectou alguma marcação (pelo menos uma questão respondida)
-                const hasMarkings = detected.some(m => m !== '-');
+                const grade = ((hits / correctLetters.length) * 10).toFixed(1);
                 
-                if (hasMarkings) {
-                    showRealtimeStatus('📋 Gabarito detectado! Processando...', 'info');
+                // Atualiza UI
+                finalGrade.textContent = grade;
+                hitsCount.textContent = hits;
+                errorsCount.textContent = errors;
+                blankCount.textContent = blank;
+                
+                // Preenche tabela
+                let tableHtml = '';
+                for (let i = 0; i < correctLetters.length; i++) {
+                    const correct = correctLetters[i];
+                    const marked = detected[i];
+                    const rowClass = marked === correct ? 'correct-row' : 
+                                    marked === '-' ? '' : 'incorrect-row';
                     
-                    // Converte gabarito correto para letras
-                    const correctLetters = decryptedAnswers.split('').map(d => 
-                        String.fromCharCode(65 + parseInt(d))
-                    );
+                    let badgeClass = '';
+                    let badgeText = '';
                     
-                    // Calcula resultados
-                    let hits = 0, errors = 0, blank = 0;
-                    for (let i = 0; i < correctLetters.length; i++) {
-                        if (detected[i] === '-') {
-                            blank++;
-                        } else if (detected[i] === correctLetters[i]) {
-                            hits++;
-                        } else {
-                            errors++;
-                        }
+                    if (marked === '-') {
+                        badgeClass = 'badge empty';
+                        badgeText = '⚪ Branco';
+                    } else if (marked === correct) {
+                        badgeClass = 'badge correct';
+                        badgeText = '✓ Correto';
+                    } else {
+                        badgeClass = 'badge incorrect';
+                        badgeText = '✗ Errado';
                     }
                     
-                    const grade = ((hits / correctLetters.length) * 10).toFixed(1);
-                    
-                    // Atualiza UI
-                    gradeSpan.textContent = grade;
-                    hitsCount.textContent = hits;
-                    errorsCount.textContent = errors;
-                    blankCount.textContent = blank;
-                    
-                    // Preenche tabela
-                    let tableHtml = '';
-                    for (let i = 0; i < correctLetters.length; i++) {
-                        const correct = correctLetters[i];
-                        const marked = detected[i];
-                        let badgeClass = '';
-                        let resultText = '';
-                        
-                        if (marked === '-') {
-                            badgeClass = 'badge empty';
-                            resultText = 'Em branco';
-                        } else if (marked === correct) {
-                            badgeClass = 'badge correct';
-                            resultText = '✓ Correto';
-                        } else {
-                            badgeClass = 'badge incorrect';
-                            resultText = '✗ Errado';
-                        }
-                        
-                        tableHtml += `
-                            <tr>
-                                <td><strong>${i + 1}</strong></td>
-                                <td><span style="color: #1a73e8; font-weight: bold;">${correct}</span></td>
-                                <td><span style="font-weight: bold;">${marked}</span></td>
-                                <td><span class="${badgeClass}">${resultText}</span></td>
-                            </tr>
-                        `;
-                    }
-                    
-                    detailsTable.innerHTML = tableHtml;
-                    
-                    // Mostra resultados
-                    resultsDiv.classList.remove('hidden');
-                    
-                    // Para o processamento automático
-                    if (autoProcessInterval) {
-                        clearInterval(autoProcessInterval);
-                        autoProcessInterval = null;
-                    }
-                    
-                    showRealtimeStatus('✅ Correção concluída!', 'success');
+                    tableHtml += `
+                        <tr class="${rowClass}">
+                            <td><strong>${i + 1}</strong></td>
+                            <td><span style="color: #2563eb; font-weight: 600;">${correct}</span></td>
+                            <td><span style="font-weight: 600;">${marked}</span></td>
+                            <td><span class="${badgeClass}">${badgeText}</span></td>
+                        </tr>
+                    `;
                 }
+                
+                detailsTableBody.innerHTML = tableHtml;
+                
+                // Mostra resultados
+                resultsArea.classList.remove('hidden');
+                captureArea.classList.add('hidden');
+                gabaritoIndicator.style.background = '#22c55e';
+                
+                setStatus('✅ Correção concluída!', 'success');
+                
+            } catch (error) {
+                debug('Erro: ' + error.message);
+                setStatus('❌ Erro na correção: ' + error.message, 'error');
             }
         }
 
-        // Iniciar câmera
+        // ============================================
+        // CONTROLE DA CÂMERA
+        // ============================================
         async function startCamera() {
             try {
-                videoStream = await navigator.mediaDevices.getUserMedia({
+                setStatus('📷 Solicitando acesso à câmera...', 'info');
+                
+                state.videoStream = await navigator.mediaDevices.getUserMedia({
                     video: { 
                         facingMode: 'environment',
                         width: { ideal: 1920 },
@@ -692,82 +926,110 @@
                     audio: false
                 });
                 
-                video.srcObject = videoStream;
+                video.srcObject = state.videoStream;
                 await video.play();
                 
-                startCameraBtn.classList.add('hidden');
-                stopCameraBtn.classList.remove('hidden');
+                btnStartCamera.classList.add('hidden');
+                btnStopCamera.classList.remove('hidden');
                 
-                showRealtimeStatus('📷 Câmera ativa. Posicione o QR Code na área verde.', 'info');
+                setStatus('📷 Câmera ativa. Posicione o QR Code.', 'info');
                 
-                // Inicia processamento automático
-                if (autoProcessInterval) clearInterval(autoProcessInterval);
-                autoProcessInterval = setInterval(processFrame, 1000); // Processa a cada 1 segundo
+                // Inicia scan de QR
+                startQRScan();
                 
             } catch (error) {
-                showRealtimeStatus('Erro na câmera: ' + error.message, 'error');
+                setStatus('❌ Erro na câmera: ' + error.message, 'error');
             }
         }
 
-        // Parar câmera
         function stopCamera() {
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
-                videoStream = null;
+            if (state.videoStream) {
+                state.videoStream.getTracks().forEach(track => track.stop());
+                state.videoStream = null;
             }
             
-            if (autoProcessInterval) {
-                clearInterval(autoProcessInterval);
-                autoProcessInterval = null;
+            if (state.scanInterval) {
+                clearInterval(state.scanInterval);
+                state.scanInterval = null;
             }
             
-            startCameraBtn.classList.remove('hidden');
-            stopCameraBtn.classList.add('hidden');
-            hideRealtimeStatus();
+            btnStartCamera.classList.remove('hidden');
+            btnStopCamera.classList.add('hidden');
+            passwordArea.classList.add('hidden');
+            captureArea.classList.add('hidden');
+            qrInfo.classList.add('hidden');
+            
+            setStatus('⏹️ Câmera parada', 'info');
         }
 
-        // Event Listeners
-        setPasswordBtn.addEventListener('click', () => {
-            const password = globalPasswordInput.value.trim();
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        btnStartCamera.addEventListener('click', startCamera);
+        
+        btnStopCamera.addEventListener('click', stopCamera);
+        
+        btnConfirmPassword.addEventListener('click', () => {
+            const password = passwordInput.value.trim();
             
             if (!password) {
-                passwordStatus.textContent = '❌ Digite uma senha!';
-                passwordStatus.className = 'status error';
-                passwordStatus.classList.remove('hidden');
+                setStatus('❌ Digite a senha!', 'error');
                 return;
             }
             
-            globalPassword = password;
+            state.globalPassword = password;
             
-            passwordStatus.textContent = '✅ Senha salva! Agora aponte a câmera para o QR Code.';
-            passwordStatus.className = 'status success';
-            passwordStatus.classList.remove('hidden');
-            
-            globalPasswordInput.disabled = true;
-            setPasswordBtn.disabled = true;
-        });
-
-        startCameraBtn.addEventListener('click', startCamera);
-        
-        stopCameraBtn.addEventListener('click', stopCamera);
-        
-        newScanBtn.addEventListener('click', () => {
-            // Reseta apenas os dados da prova, mantém a senha
-            examData = null;
-            decryptedAnswers = null;
-            resultsDiv.classList.add('hidden');
-            
-            showRealtimeStatus('🔄 Pronto para nova leitura. Aponte para o QR Code.', 'info');
-            
-            // Reinicia processamento
-            if (!autoProcessInterval) {
-                autoProcessInterval = setInterval(processFrame, 1000);
+            // Se já tem QR lido, tenta descriptografar
+            if (state.examData) {
+                const decrypted = decryptCode(state.examData.encryptedCode, password);
+                if (decrypted) {
+                    state.decryptedAnswers = decrypted;
+                    setStatus(`✅ Senha correta! ${decrypted.length} questões. Posicione o gabarito.`, 'success');
+                    passwordArea.classList.add('hidden');
+                    captureArea.classList.remove('hidden');
+                } else {
+                    setStatus('❌ Senha incorreta!', 'error');
+                }
+            } else {
+                setStatus('✅ Senha salva. Aponte para o QR Code.', 'success');
+                passwordArea.classList.add('hidden');
             }
         });
+        
+        btnCapture.addEventListener('click', captureAndCorrect);
+        
+        btnNewScan.addEventListener('click', () => {
+            // Reseta apenas dados da prova
+            state.examData = null;
+            state.decryptedAnswers = null;
+            
+            resultsArea.classList.add('hidden');
+            qrInfo.classList.add('hidden');
+            captureArea.classList.add('hidden');
+            passwordArea.classList.add('hidden');
+            
+            setStatus('📷 Pronto para nova leitura', 'info');
+            
+            // Reinicia scan
+            if (state.videoStream) {
+                startQRScan();
+            }
+        });
+        
+        btnCaptureAgain.addEventListener('click', () => {
+            resultsArea.classList.add('hidden');
+            captureArea.classList.remove('hidden');
+            captureAndCorrect();
+        });
 
-        // Limpeza
-        window.addEventListener('beforeunload', () => {
-            stopCamera();
+        // Aguarda OpenCV
+        window.addEventListener('load', () => {
+            if (typeof cv !== 'undefined') {
+                cv.onRuntimeInitialized = () => {
+                    state.opencvReady = true;
+                    debug('✅ OpenCV pronto');
+                };
+            }
         });
     </script>
 </body>
