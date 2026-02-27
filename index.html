@@ -1,1034 +1,621 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NotaCerta Scanner v5.0 - Correção Oficial</title>
+    <title>Corretor de Gabaritos</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
         }
-
+        
         body {
-            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
-            background: #f8f9fa;
+            background: #f0f2f5;
             min-height: 100vh;
-            color: #1e293b;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 10px;
         }
-
-        .header {
-            background: linear-gradient(135deg, #2563eb, #1e40af);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        .header h1 {
-            font-size: 28px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-
-        .header .sub {
-            font-size: 14px;
-            opacity: 0.9;
-            font-weight: 400;
-        }
-
-        .header .version {
-            font-size: 12px;
-            background: rgba(255,255,255,0.2);
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 30px;
-            margin-top: 8px;
-        }
-
-        .container {
-            padding: 16px;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        /* Cards */
-        .card {
+        
+        #app {
+            max-width: 500px;
+            width: 100%;
             background: white;
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-            border: 1px solid rgba(0,0,0,0.04);
-        }
-
-        .camera-container {
-            background: #0f172a;
             border-radius: 20px;
-            overflow: hidden;
-            margin-bottom: 16px;
-            position: relative;
-            aspect-ratio: 4/3;
-            border: 3px solid #2563eb;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 15px;
         }
-
-        #video {
+        
+        h1 {
+            font-size: 24px;
+            color: #1a73e8;
+            text-align: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .camera-section {
+            position: relative;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 4/3;
+            margin-bottom: 15px;
+        }
+        
+        #video, #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-
-        .overlay-guide {
+        
+        #canvas {
+            display: none;
+        }
+        
+        .overlay {
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
+            width: 100%;
+            height: 100%;
             pointer-events: none;
+            border: 2px solid rgba(255,255,255,0.5);
         }
-
-        .gabarito-frame {
+        
+        .corner-marker {
             position: absolute;
-            top: 12%;
-            left: 5%;
-            width: 90%;
-            height: 70%;
-            border: 3px dashed #22c55e;
-            border-radius: 16px;
-            background: rgba(34, 197, 94, 0.08);
-            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
-            animation: pulse 2s infinite;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #00ff00;
         }
-
-        .qr-indicator {
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            background: #2563eb;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 30px;
-            font-size: 12px;
-            font-weight: 600;
-            z-index: 10;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-
-        .gabarito-indicator {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: #22c55e;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 30px;
-            font-size: 12px;
-            font-weight: 600;
-            z-index: 10;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.8; }
-            50% { opacity: 1; }
-            100% { opacity: 0.8; }
-        }
-
-        .btn {
-            background: #2563eb;
-            color: white;
-            border: none;
-            padding: 18px 24px;
-            border-radius: 50px;
-            font-size: 18px;
-            font-weight: 600;
-            width: 100%;
-            margin-bottom: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-            background: #1e40af;
-        }
-
-        .btn.secondary {
-            background: #475569;
-            box-shadow: none;
-        }
-
-        .btn:disabled {
-            background: #94a3b8;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .input-group {
-            background: white;
-            border-radius: 20px;
-            padding: 16px;
-            margin-bottom: 16px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #1e293b;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 16px;
-            transition: all 0.2s;
-            background: #f8fafc;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: #2563eb;
-            background: white;
-        }
-
-        .status-badge {
-            text-align: center;
-            padding: 14px;
-            border-radius: 50px;
-            margin-bottom: 16px;
-            font-weight: 600;
-            font-size: 14px;
-            background: #f1f5f9;
-            color: #1e293b;
-            border-left: 6px solid #2563eb;
-        }
-
-        .status-badge.success {
-            background: #dcfce7;
-            color: #166534;
-            border-left-color: #22c55e;
-        }
-
-        .status-badge.error {
-            background: #fee2e2;
-            color: #991b1b;
-            border-left-color: #ef4444;
-        }
-
-        .status-badge.warning {
-            background: #fef9c3;
-            color: #854d0e;
-            border-left-color: #eab308;
-        }
-
-        .results-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .result-card {
-            background: #f8fafc;
-            border-radius: 16px;
-            padding: 16px;
-            text-align: center;
-            border: 1px solid #e2e8f0;
-        }
-
-        .result-value {
-            font-size: 32px;
-            font-weight: 700;
-            line-height: 1.2;
-            margin-bottom: 4px;
-        }
-
-        .result-label {
-            font-size: 12px;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .hits { color: #16a34a; }
-        .errors { color: #dc2626; }
-        .blank { color: #b45309; }
-
-        .grade-circle {
-            background: linear-gradient(135deg, #2563eb, #1e40af);
-            color: white;
-            border-radius: 50px;
-            padding: 24px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .grade-number {
-            font-size: 56px;
-            font-weight: 700;
-            line-height: 1;
-            margin-bottom: 4px;
-        }
-
-        .grade-label {
-            font-size: 14px;
-            opacity: 0.9;
-            letter-spacing: 1px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 16px;
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
-        th {
-            background: #2563eb;
-            color: white;
-            padding: 14px 8px;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        td {
-            padding: 12px 8px;
-            text-align: center;
-            border-bottom: 1px solid #e2e8f0;
-            font-weight: 500;
-        }
-
-        tr:last-child td {
+        
+        .corner-marker.top-left {
+            top: 10px;
+            left: 10px;
+            border-right: none;
             border-bottom: none;
         }
-
-        .correct-row {
-            background: #f0fdf4;
+        
+        .corner-marker.top-right {
+            top: 10px;
+            right: 10px;
+            border-left: none;
+            border-bottom: none;
         }
-
-        .incorrect-row {
-            background: #fef2f2;
+        
+        .corner-marker.bottom-left {
+            bottom: 10px;
+            left: 10px;
+            border-right: none;
+            border-top: none;
         }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 12px;
+        
+        .corner-marker.bottom-right {
+            bottom: 10px;
+            right: 10px;
+            border-left: none;
+            border-top: none;
         }
-
-        .badge.correct {
-            background: #dcfce7;
-            color: #166534;
+        
+        .guide-grid {
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            width: 80%;
+            height: 80%;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            opacity: 0.3;
+            pointer-events: none;
         }
-
-        .badge.incorrect {
-            background: #fee2e2;
-            color: #991b1b;
+        
+        .guide-cell {
+            border: 1px dashed #00ff00;
         }
-
-        .badge.empty {
-            background: #fef9c3;
-            color: #854d0e;
-        }
-
-        .debug-panel {
-            background: #0f172a;
-            color: #e2e8f0;
-            padding: 12px;
-            border-radius: 12px;
-            font-family: monospace;
-            font-size: 11px;
-            margin-top: 16px;
-            white-space: pre-wrap;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .flex {
+        
+        .button-group {
             display: flex;
             gap: 10px;
+            margin-bottom: 15px;
         }
-
-        .mt-4 {
-            margin-top: 16px;
+        
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            background: #1a73e8;
+            color: white;
+        }
+        
+        button:active {
+            opacity: 0.8;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .gabarito-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .gabarito-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .gabarito-inputs {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .gabarito-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .gabarito-row label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .gabarito-row select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .results-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1a73e8;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .score-details {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+        }
+        
+        .score-detail {
+            text-align: center;
+        }
+        
+        .score-detail .label {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .score-detail .value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .answers-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        
+        .answer-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .answer-item.correct {
+            background: rgba(0,255,0,0.1);
+        }
+        
+        .answer-item.incorrect {
+            background: rgba(255,0,0,0.1);
+        }
+        
+        .error-message {
+            color: #d32f2f;
+            text-align: center;
+            padding: 10px;
+            background: #ffebee;
+            border-radius: 5px;
+            margin-bottom: 10px;
         }
     </style>
-    
-    <!-- Bibliotecas via CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.js"></script>
-    <script src="https://docs.opencv.org/4.8.0/opencv.js" async></script>
 </head>
 <body>
-    <div class="header">
-        <h1>📱 NotaCerta Scanner</h1>
-        <div class="sub">Sistema Oficial de Correção</div>
-        <div class="version">Versão 5.0 - Layout A4</div>
+    <div id="app">
+        <h1>📝 Corretor de Gabaritos</h1>
+        
+        <div class="camera-section">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas"></canvas>
+            <div class="overlay">
+                <div class="corner-marker top-left"></div>
+                <div class="corner-marker top-right"></div>
+                <div class="corner-marker bottom-left"></div>
+                <div class="corner-marker bottom-right"></div>
+                <div class="guide-grid" id="guideGrid"></div>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button id="startCamera" onclick="startCamera()">📷 Iniciar Câmera</button>
+            <button id="captureBtn" onclick="captureImage()" disabled>📸 Capturar</button>
+            <button id="correctBtn" onclick="correctGabarito()" disabled>✅ Corrigir</button>
+        </div>
+        
+        <div class="gabarito-section">
+            <div class="gabarito-title">Gabarito Correto (linhas 1-4)</div>
+            <div class="gabarito-inputs">
+                <div class="gabarito-row">
+                    <label>Linha 1</label>
+                    <select id="gabarito1">
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C" selected>C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                    </select>
+                </div>
+                <div class="gabarito-row">
+                    <label>Linha 2</label>
+                    <select id="gabarito2">
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D" selected>D</option>
+                        <option value="E">E</option>
+                    </select>
+                </div>
+                <div class="gabarito-row">
+                    <label>Linha 3</label>
+                    <select id="gabarito3">
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E" selected>E</option>
+                    </select>
+                </div>
+                <div class="gabarito-row">
+                    <label>Linha 4</label>
+                    <select id="gabarito4">
+                        <option value="A">A</option>
+                        <option value="B" selected>B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="results-section">
+            <div class="score" id="scoreDisplay">0/4</div>
+            <div class="score-details">
+                <div class="score-detail">
+                    <div class="label">Acertos</div>
+                    <div class="value" id="acertos">0</div>
+                </div>
+                <div class="score-detail">
+                    <div class="label">Erros</div>
+                    <div class="value" id="erros">0</div>
+                </div>
+            </div>
+            <div id="answersList" class="answers-list"></div>
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+        </div>
     </div>
     
-    <div class="container">
-        <!-- Status principal -->
-        <div id="main-status" class="status-badge">
-            ⏳ Pronto para iniciar
-        </div>
-        
-        <!-- Área da câmera -->
-        <div class="camera-container">
-            <video id="video" playsinline autoplay></video>
-            <div class="overlay-guide">
-                <div class="gabarito-frame"></div>
-                <span class="qr-indicator" id="qr-indicator">📷 QR Code</span>
-                <span class="gabarito-indicator" id="gabarito-indicator">📋 Gabarito</span>
-            </div>
-        </div>
-        
-        <!-- Controles principais -->
-        <div class="card">
-            <button id="btn-start-camera" class="btn">
-                <span>📸</span> Iniciar Câmera
-            </button>
-            
-            <div id="password-area" class="hidden">
-                <div class="input-group">
-                    <label>🔑 Senha da Prova</label>
-                    <input type="password" id="password-input" placeholder="Digite a senha..." autocomplete="off">
-                    <button id="btn-confirm-password" class="btn" style="margin-top: 12px;">
-                        ✅ Confirmar Senha
-                    </button>
-                </div>
-            </div>
-            
-            <div id="capture-area" class="hidden">
-                <button id="btn-capture" class="btn">
-                    <span>📸</span> Capturar e Corrigir Gabarito
-                </button>
-            </div>
-            
-            <button id="btn-stop-camera" class="btn secondary hidden">
-                ⏹️ Parar Câmera
-            </button>
-        </div>
-        
-        <!-- Informações do QR Code -->
-        <div id="qr-info" class="card hidden">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                <span style="font-weight: 600;">📋 EXAM ID:</span>
-                <span id="exam-id" style="font-family: monospace; background: #f1f5f9; padding: 4px 12px; border-radius: 30px;"></span>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-                <span style="font-weight: 600;">🔐 Código:</span>
-                <span id="encrypted-code" style="font-family: monospace; background: #f1f5f9; padding: 4px 12px; border-radius: 30px;"></span>
-            </div>
-        </div>
-        
-        <!-- Resultados -->
-        <div id="results-area" class="hidden">
-            <div class="grade-circle">
-                <div class="grade-number" id="final-grade">0.0</div>
-                <div class="grade-label">NOTA FINAL</div>
-            </div>
-            
-            <div class="results-grid">
-                <div class="result-card">
-                    <div class="result-value hits" id="hits-count">0</div>
-                    <div class="result-label">ACERTOS</div>
-                </div>
-                <div class="result-card">
-                    <div class="result-value errors" id="errors-count">0</div>
-                    <div class="result-label">ERROS</div>
-                </div>
-                <div class="result-card">
-                    <div class="result-value blank" id="blank-count">0</div>
-                    <div class="result-label">BRANCO</div>
-                </div>
-            </div>
-            
-            <div style="background: white; border-radius: 20px; padding: 16px; margin-top: 16px;">
-                <h3 style="margin-bottom: 16px; color: #2563eb;">📝 Detalhamento</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Q</th>
-                            <th>Gabarito</th>
-                            <th>Resposta</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="details-table-body"></tbody>
-                </table>
-            </div>
-            
-            <div class="flex mt-4">
-                <button id="btn-new-scan" class="btn secondary" style="flex: 1;">🔄 Nova Prova</button>
-                <button id="btn-capture-again" class="btn" style="flex: 1;">📸 Recapturar</button>
-            </div>
-        </div>
-        
-        <!-- Painel de debug (opcional) -->
-        <div id="debug-panel" class="debug-panel hidden">
-            <div id="debug-content"></div>
-        </div>
-    </div>
-
-    <canvas id="canvas" style="display: none;"></canvas>
-    <canvas id="opencv-canvas" style="display: none;"></canvas>
-
     <script>
-        // ============================================
-        // ESTADO GLOBAL DA APLICAÇÃO
-        // ============================================
-        let state = {
-            videoStream: null,
-            globalPassword: null,
-            examData: null,
-            decryptedAnswers: null,
-            opencvReady: false,
-            isScanning: false,
-            scanInterval: null
-        };
+        let videoStream = null;
+        let capturedImageData = null;
+        let imageCanvas = document.getElementById('canvas');
+        let video = document.getElementById('video');
+        let ctx = imageCanvas.getContext('2d');
         
-        // Elementos DOM
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const opencvCanvas = document.getElementById('opencv-canvas');
-        const mainStatus = document.getElementById('main-status');
-        const btnStartCamera = document.getElementById('btn-start-camera');
-        const btnStopCamera = document.getElementById('btn-stop-camera');
-        const passwordArea = document.getElementById('password-area');
-        const captureArea = document.getElementById('capture-area');
-        const passwordInput = document.getElementById('password-input');
-        const btnConfirmPassword = document.getElementById('btn-confirm-password');
-        const btnCapture = document.getElementById('btn-capture');
-        const qrInfo = document.getElementById('qr-info');
-        const examIdSpan = document.getElementById('exam-id');
-        const encryptedCodeSpan = document.getElementById('encrypted-code');
-        const resultsArea = document.getElementById('results-area');
-        const finalGrade = document.getElementById('final-grade');
-        const hitsCount = document.getElementById('hits-count');
-        const errorsCount = document.getElementById('errors-count');
-        const blankCount = document.getElementById('blank-count');
-        const detailsTableBody = document.getElementById('details-table-body');
-        const btnNewScan = document.getElementById('btn-new-scan');
-        const btnCaptureAgain = document.getElementById('btn-capture-again');
-        const qrIndicator = document.getElementById('qr-indicator');
-        const gabaritoIndicator = document.getElementById('gabarito-indicator');
-        const debugPanel = document.getElementById('debug-panel');
-        const debugContent = document.getElementById('debug-content');
-
-        // ============================================
-        // FUNÇÕES DE UTILIDADE
-        // ============================================
-        function setStatus(msg, type = 'info') {
-            mainStatus.textContent = msg;
-            mainStatus.className = `status-badge ${type}`;
+        // Criar guias da grade
+        const guideGrid = document.getElementById('guideGrid');
+        for (let i = 0; i < 20; i++) {
+            let cell = document.createElement('div');
+            cell.className = 'guide-cell';
+            guideGrid.appendChild(cell);
         }
-
-        function debug(msg) {
-            console.log(msg);
-            debugContent.innerHTML = new Date().toLocaleTimeString() + ': ' + msg + '<br>' + debugContent.innerHTML;
-        }
-
-        // ============================================
-        // CRIPTOGRAFIA (COMPATÍVEL COM PYTHON)
-        // ============================================
-        function getSeedFromPassword(password) {
-            // SHA256 da senha - igual ao Python
-            const hash = CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
-            // Pega primeiros 8 caracteres hex (32 bits) para seed
-            const seedHex = hash.substring(0, 8);
-            return parseInt(seedHex, 16);
-        }
-
-        // PRNG Mulberry32 - compatível com random do Python
-        function mulberry32(seed) {
-            return function() {
-                seed |= 0;
-                seed = (seed + 0x6D2B79F5) | 0;
-                let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
-                t = (t + Math.imul(t ^ t >>> 7, 61 | t)) ^ t;
-                return ((t ^ t >>> 14) >>> 0) / 4294967296;
-            };
-        }
-
-        // Desembaralha o código - EXATAMENTE como o Python
-        function decryptCode(encryptedCode, password) {
-            if (!password) return null;
-            
-            const seed = getSeedFromPassword(password);
-            const n = encryptedCode.length;
-            
-            // Gera índices e embaralha (igual ao Python)
-            const indices = Array.from({length: n}, (_, i) => i);
-            const rand = mulberry32(seed);
-            
-            // Fisher-Yates shuffle
-            for (let i = indices.length - 1; i > 0; i--) {
-                const j = Math.floor(rand() * (i + 1));
-                [indices[i], indices[j]] = [indices[j], indices[i]];
-            }
-            
-            // Cria permutação inversa
-            const inverse = new Array(n);
-            for (let i = 0; i < n; i++) {
-                inverse[indices[i]] = i;
-            }
-            
-            // Aplica inversa
-            let decrypted = '';
-            for (let i = 0; i < n; i++) {
-                decrypted += encryptedCode[inverse[i]];
-            }
-            
-            // Verifica se é válido (só dígitos 0-4)
-            return /^[0-4]+$/.test(decrypted) ? decrypted : null;
-        }
-
-        // ============================================
-        // DETECÇÃO DE CÍRCULOS COM OPENCV
-        // ============================================
-        async function detectCirclesWithOpenCV(imageData, width, height, numQuestions) {
-            if (!state.opencvReady) {
-                throw new Error('OpenCV não está pronto');
-            }
-
-            debug('🔍 Iniciando detecção de círculos...');
-            
-            const src = cv.matFromImageData(imageData);
-            const gray = new cv.Mat();
-            const binary = new cv.Mat();
-            const circles = new cv.Mat();
-            
-            try {
-                // Converte para grayscale
-                cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-                
-                // Aplica blur para reduzir ruído
-                cv.GaussianBlur(gray, gray, new cv.Size(5, 5), 0);
-                
-                // Threshold adaptativo para binarizar
-                cv.adaptiveThreshold(gray, binary, 255, 
-                    cv.ADAPTIVE_THRESH_GAUSSIAN_C, 
-                    cv.THRESH_BINARY_INV, 15, 5);
-                
-                // Detecta círculos com HoughCircles
-                // Parâmetros ajustados para o layout A4
-                cv.HoughCircles(gray, circles, cv.HOUGH_GRADIENT, 1.3, 30, 100, 35, 10, 30);
-                
-                // Layout esperado: 5 colunas × até 20 linhas
-                const cols = 5;
-                const rows = Math.min(numQuestions, 20);
-                
-                // Extrai centros dos círculos detectados
-                const centers = [];
-                for (let i = 0; i < circles.cols; i++) {
-                    const x = circles.data32F[i * 3];
-                    const y = circles.data32F[i * 3 + 1];
-                    const r = circles.data32F[i * 3 + 2];
-                    centers.push({x, y, r});
-                }
-                
-                debug(`Detectados ${centers.length} círculos`);
-                
-                // Organiza por linhas (baseado em coordenada Y)
-                centers.sort((a, b) => a.y - b.y);
-                
-                // Agrupa em linhas (tolerância vertical)
-                const rows_centers = [];
-                let currentRow = [];
-                let lastY = centers[0]?.y || 0;
-                
-                for (const c of centers) {
-                    if (Math.abs(c.y - lastY) < 20) {
-                        currentRow.push(c);
-                    } else {
-                        if (currentRow.length > 0) {
-                            // Ordena por X dentro da linha
-                            currentRow.sort((a, b) => a.x - b.x);
-                            rows_centers.push(currentRow);
-                        }
-                        currentRow = [c];
-                        lastY = c.y;
-                    }
-                }
-                if (currentRow.length > 0) {
-                    currentRow.sort((a, b) => a.x - b.x);
-                    rows_centers.push(currentRow);
-                }
-                
-                debug(`Agrupados em ${rows_centers.length} linhas`);
-                
-                // Detecta marcações
-                const detected = new Array(rows).fill('-');
-                
-                for (let r = 0; r < Math.min(rows, rows_centers.length); r++) {
-                    const row = rows_centers[r];
-                    if (row.length < 3) continue; // Linha inválida
-                    
-                    // Para cada alternativa, verifica preenchimento
-                    const darknessValues = [];
-                    
-                    for (let c = 0; c < cols; c++) {
-                        if (c >= row.length) {
-                            darknessValues.push(0);
-                            continue;
-                        }
-                        
-                        const center = row[c];
-                        
-                        // ROI ao redor do círculo
-                        const roiX = Math.max(0, Math.floor(center.x - center.r));
-                        const roiY = Math.max(0, Math.floor(center.y - center.r));
-                        const roiWidth = Math.min(width - roiX, Math.floor(center.r * 2));
-                        const roiHeight = Math.min(height - roiY, Math.floor(center.r * 2));
-                        
-                        if (roiWidth <= 0 || roiHeight <= 0) {
-                            darknessValues.push(0);
-                            continue;
-                        }
-                        
-                        // Extrai ROI
-                        const rect = new cv.Rect(roiX, roiY, roiWidth, roiHeight);
-                        const roi = binary.roi(rect);
-                        
-                        // Conta pixels brancos (marcados)
-                        const whitePixels = cv.countNonZero(roi);
-                        const totalPixels = roiWidth * roiHeight;
-                        const darkness = (whitePixels / totalPixels) * 100;
-                        
-                        darknessValues.push(darkness);
-                        roi.delete();
-                    }
-                    
-                    // Encontra alternativa mais escura (>35% preenchido)
-                    let maxDarkness = 0;
-                    let selectedCol = -1;
-                    
-                    for (let c = 0; c < cols; c++) {
-                        if (darknessValues[c] > 35 && darknessValues[c] > maxDarkness) {
-                            maxDarkness = darknessValues[c];
-                            selectedCol = c;
-                        }
-                    }
-                    
-                    if (selectedCol >= 0) {
-                        detected[r] = String.fromCharCode(65 + selectedCol);
-                    }
-                    
-                    debug(`Q${r+1}: ` + darknessValues.map((v,i) => 
-                        `${String.fromCharCode(65+i)}:${v.toFixed(1)}%`).join(' ') + 
-                        ` → ${detected[r]}`);
-                }
-                
-                return detected;
-                
-            } finally {
-                // Libera memória
-                src.delete();
-                gray.delete();
-                binary.delete();
-                circles.delete();
-            }
-        }
-
-        // ============================================
-        // SCAN AUTOMÁTICO DE QR CODE
-        // ============================================
-        function startQRScan() {
-            if (state.scanInterval) clearInterval(state.scanInterval);
-            
-            state.scanInterval = setInterval(() => {
-                if (!video.videoWidth || state.examData) return;
-                
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = video.videoWidth;
-                tempCanvas.height = video.videoHeight;
-                const ctx = tempCanvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
-                
-                const imageData = ctx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-                const code = jsQR(imageData.data, tempCanvas.width, tempCanvas.height);
-                
-                if (code) {
-                    const parts = code.data.split(':');
-                    if (parts.length === 2 && parts[1].length > 0) {
-                        // QR Code válido encontrado
-                        state.examData = {
-                            examId: parts[0],
-                            encryptedCode: parts[1]
-                        };
-                        
-                        // Atualiza UI
-                        examIdSpan.textContent = state.examData.examId;
-                        encryptedCodeSpan.textContent = state.examData.encryptedCode.substring(0, 10) + '...';
-                        qrInfo.classList.remove('hidden');
-                        
-                        // Se já tem senha, tenta descriptografar automaticamente
-                        if (state.globalPassword) {
-                            const decrypted = decryptCode(state.examData.encryptedCode, state.globalPassword);
-                            if (decrypted) {
-                                state.decryptedAnswers = decrypted;
-                                setStatus(`✅ QR lido! ${decrypted.length} questões. Posicione o gabarito.`, 'success');
-                                captureArea.classList.remove('hidden');
-                                qrIndicator.style.background = '#22c55e';
-                            } else {
-                                setStatus('⚠️ QR lido, mas senha parece incorreta', 'warning');
-                                passwordArea.classList.remove('hidden');
-                            }
-                        } else {
-                            setStatus('✅ QR Code detectado! Digite a senha.', 'success');
-                            passwordArea.classList.remove('hidden');
-                        }
-                        
-                        clearInterval(state.scanInterval);
-                    }
-                }
-            }, 500);
-        }
-
-        // ============================================
-        // CAPTURA E CORREÇÃO
-        // ============================================
-        async function captureAndCorrect() {
-            if (!state.decryptedAnswers) {
-                setStatus('❌ Nenhum gabarito descriptografado', 'error');
-                return;
-            }
-            
-            setStatus('📸 Capturando imagem...', 'info');
-            
-            // Captura frame atual
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            // Pega dados da imagem
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            
-            try {
-                setStatus('🔍 Analisando gabarito...', 'info');
-                
-                // Detecta círculos
-                const detected = await detectCirclesWithOpenCV(
-                    imageData, 
-                    canvas.width, 
-                    canvas.height, 
-                    state.decryptedAnswers.length
-                );
-                
-                // Converte gabarito correto
-                const correctLetters = state.decryptedAnswers.split('').map(d => 
-                    String.fromCharCode(65 + parseInt(d))
-                );
-                
-                // Calcula resultados
-                let hits = 0, errors = 0, blank = 0;
-                for (let i = 0; i < correctLetters.length; i++) {
-                    if (detected[i] === '-') {
-                        blank++;
-                    } else if (detected[i] === correctLetters[i]) {
-                        hits++;
-                    } else {
-                        errors++;
-                    }
-                }
-                
-                const grade = ((hits / correctLetters.length) * 10).toFixed(1);
-                
-                // Atualiza UI
-                finalGrade.textContent = grade;
-                hitsCount.textContent = hits;
-                errorsCount.textContent = errors;
-                blankCount.textContent = blank;
-                
-                // Preenche tabela
-                let tableHtml = '';
-                for (let i = 0; i < correctLetters.length; i++) {
-                    const correct = correctLetters[i];
-                    const marked = detected[i];
-                    const rowClass = marked === correct ? 'correct-row' : 
-                                    marked === '-' ? '' : 'incorrect-row';
-                    
-                    let badgeClass = '';
-                    let badgeText = '';
-                    
-                    if (marked === '-') {
-                        badgeClass = 'badge empty';
-                        badgeText = '⚪ Branco';
-                    } else if (marked === correct) {
-                        badgeClass = 'badge correct';
-                        badgeText = '✓ Correto';
-                    } else {
-                        badgeClass = 'badge incorrect';
-                        badgeText = '✗ Errado';
-                    }
-                    
-                    tableHtml += `
-                        <tr class="${rowClass}">
-                            <td><strong>${i + 1}</strong></td>
-                            <td><span style="color: #2563eb; font-weight: 600;">${correct}</span></td>
-                            <td><span style="font-weight: 600;">${marked}</span></td>
-                            <td><span class="${badgeClass}">${badgeText}</span></td>
-                        </tr>
-                    `;
-                }
-                
-                detailsTableBody.innerHTML = tableHtml;
-                
-                // Mostra resultados
-                resultsArea.classList.remove('hidden');
-                captureArea.classList.add('hidden');
-                gabaritoIndicator.style.background = '#22c55e';
-                
-                setStatus('✅ Correção concluída!', 'success');
-                
-            } catch (error) {
-                debug('Erro: ' + error.message);
-                setStatus('❌ Erro na correção: ' + error.message, 'error');
-            }
-        }
-
-        // ============================================
-        // CONTROLE DA CÂMERA
-        // ============================================
+        
         async function startCamera() {
             try {
-                setStatus('📷 Solicitando acesso à câmera...', 'info');
-                
-                state.videoStream = await navigator.mediaDevices.getUserMedia({
-                    video: { 
+                videoStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
                         facingMode: 'environment',
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 }
-                    },
-                    audio: false
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
                 });
                 
-                video.srcObject = state.videoStream;
-                await video.play();
-                
-                btnStartCamera.classList.add('hidden');
-                btnStopCamera.classList.remove('hidden');
-                
-                setStatus('📷 Câmera ativa. Posicione o QR Code.', 'info');
-                
-                // Inicia scan de QR
-                startQRScan();
+                video.srcObject = videoStream;
+                document.getElementById('captureBtn').disabled = false;
+                document.getElementById('startCamera').disabled = true;
                 
             } catch (error) {
-                setStatus('❌ Erro na câmera: ' + error.message, 'error');
+                showError('Erro ao acessar câmera: ' + error.message);
             }
         }
-
-        function stopCamera() {
-            if (state.videoStream) {
-                state.videoStream.getTracks().forEach(track => track.stop());
-                state.videoStream = null;
-            }
+        
+        function captureImage() {
+            if (!videoStream) return;
             
-            if (state.scanInterval) {
-                clearInterval(state.scanInterval);
-                state.scanInterval = null;
-            }
+            imageCanvas.width = video.videoWidth;
+            imageCanvas.height = video.videoHeight;
             
-            btnStartCamera.classList.remove('hidden');
-            btnStopCamera.classList.add('hidden');
-            passwordArea.classList.add('hidden');
-            captureArea.classList.add('hidden');
-            qrInfo.classList.add('hidden');
+            ctx.drawImage(video, 0, 0, imageCanvas.width, imageCanvas.height);
+            capturedImageData = ctx.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
             
-            setStatus('⏹️ Câmera parada', 'info');
+            document.getElementById('correctBtn').disabled = false;
+            showError('', false);
         }
-
-        // ============================================
-        // EVENT LISTENERS
-        // ============================================
-        btnStartCamera.addEventListener('click', startCamera);
         
-        btnStopCamera.addEventListener('click', stopCamera);
+        function showError(message, show = true) {
+            const errorDiv = document.getElementById('errorMessage');
+            if (show && message) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            } else {
+                errorDiv.style.display = 'none';
+            }
+        }
         
-        btnConfirmPassword.addEventListener('click', () => {
-            const password = passwordInput.value.trim();
+        function detectCorners(imageData) {
+            const width = imageData.width;
+            const height = imageData.height;
+            const data = imageData.data;
             
-            if (!password) {
-                setStatus('❌ Digite a senha!', 'error');
+            let corners = [];
+            let threshold = 50; // Limiar para detecção de pixels escuros
+            
+            // Dividir a imagem em regiões para encontrar os cantos
+            const regions = [
+                { x: 0, y: 0, w: width * 0.3, h: height * 0.3 }, // Superior esquerdo
+                { x: width * 0.7, y: 0, w: width * 0.3, h: height * 0.3 }, // Superior direito
+                { x: 0, y: height * 0.7, w: width * 0.3, h: height * 0.3 }, // Inferior esquerdo
+                { x: width * 0.7, y: height * 0.7, w: width * 0.3, h: height * 0.3 } // Inferior direito
+            ];
+            
+            for (let region of regions) {
+                let darkestX = region.x + region.w / 2;
+                let darkestY = region.y + region.h / 2;
+                let minBrightness = 255;
+                
+                // Procurar o pixel mais escuro na região
+                for (let y = region.y; y < region.y + region.h; y += 3) {
+                    for (let x = region.x; x < region.x + region.w; x += 3) {
+                        let index = (y * width + x) * 4;
+                        let brightness = (data[index] + data[index + 1] + data[index + 2]) / 3;
+                        
+                        if (brightness < minBrightness) {
+                            minBrightness = brightness;
+                            darkestX = x;
+                            darkestY = y;
+                        }
+                    }
+                }
+                
+                corners.push({ x: darkestX, y: darkestY });
+            }
+            
+            return corners;
+        }
+        
+        function applyPerspectiveTransform(imageData, corners) {
+            const width = 400;
+            const height = 300;
+            
+            let canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            let ctx = canvas.getContext('2d');
+            
+            ctx.drawImage(imageCanvas, 0, 0);
+            
+            let transformedCanvas = document.createElement('canvas');
+            transformedCanvas.width = width;
+            transformedCanvas.height = height;
+            let transformedCtx = transformedCanvas.getContext('2d');
+            
+            // Coordenadas de destino (retângulo uniforme)
+            let dstCorners = [
+                { x: 0, y: 0 },
+                { x: width, y: 0 },
+                { x: 0, y: height },
+                { x: width, y: height }
+            ];
+            
+            // Matriz de transformação simplificada
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    // Mapeamento bilinear simplificado
+                    let srcX = corners[0].x + (corners[1].x - corners[0].x) * (x / width);
+                    let srcY = corners[0].y + (corners[2].y - corners[0].y) * (y / height);
+                    
+                    srcX = Math.min(Math.max(srcX, 0), imageData.width - 1);
+                    srcY = Math.min(Math.max(srcY, 0), imageData.height - 1);
+                    
+                    let srcIndex = (Math.floor(srcY) * imageData.width + Math.floor(srcX)) * 4;
+                    let dstIndex = (y * width + x) * 4;
+                    
+                    transformedCanvas.data[dstIndex] = imageData.data[srcIndex];
+                    transformedCanvas.data[dstIndex + 1] = imageData.data[srcIndex + 1];
+                    transformedCanvas.data[dstIndex + 2] = imageData.data[srcIndex + 2];
+                    transformedCanvas.data[dstIndex + 3] = 255;
+                }
+            }
+            
+            return transformedCtx.getImageData(0, 0, width, height);
+        }
+        
+        function analyzeBubbles(imageData) {
+            const width = imageData.width;
+            const height = imageData.height;
+            const data = imageData.data;
+            
+            let cellWidth = width / 5;
+            let cellHeight = height / 4;
+            
+            let answers = [];
+            let threshold = 100; // Limiar para considerar preenchido
+            
+            for (let row = 0; row < 4; row++) {
+                let rowAnswers = [];
+                for (let col = 0; col < 5; col++) {
+                    let startX = Math.floor(col * cellWidth + cellWidth * 0.2);
+                    let endX = Math.floor((col + 1) * cellWidth - cellWidth * 0.2);
+                    let startY = Math.floor(row * cellHeight + cellHeight * 0.2);
+                    let endY = Math.floor((row + 1) * cellHeight - cellHeight * 0.2);
+                    
+                    let totalBrightness = 0;
+                    let pixelCount = 0;
+                    
+                    for (let y = startY; y < endY; y += 2) {
+                        for (let x = startX; x < endX; x += 2) {
+                            let index = (y * width + x) * 4;
+                            let brightness = (data[index] + data[index + 1] + data[index + 2]) / 3;
+                            totalBrightness += brightness;
+                            pixelCount++;
+                        }
+                    }
+                    
+                    let avgBrightness = totalBrightness / pixelCount;
+                    let isFilled = avgBrightness < threshold;
+                    rowAnswers.push(isFilled);
+                }
+                answers.push(rowAnswers);
+            }
+            
+            return answers;
+        }
+        
+        function getLetterFromIndex(index) {
+            return ['A', 'B', 'C', 'D', 'E'][index];
+        }
+        
+        function correctGabarito() {
+            if (!capturedImageData) {
+                showError('Capture uma imagem primeiro');
                 return;
             }
             
-            state.globalPassword = password;
-            
-            // Se já tem QR lido, tenta descriptografar
-            if (state.examData) {
-                const decrypted = decryptCode(state.examData.encryptedCode, password);
-                if (decrypted) {
-                    state.decryptedAnswers = decrypted;
-                    setStatus(`✅ Senha correta! ${decrypted.length} questões. Posicione o gabarito.`, 'success');
-                    passwordArea.classList.add('hidden');
-                    captureArea.classList.remove('hidden');
-                } else {
-                    setStatus('❌ Senha incorreta!', 'error');
+            try {
+                // Detectar cantos
+                let corners = detectCorners(capturedImageData);
+                
+                if (corners.length < 4) {
+                    showError('Não foi possível detectar os 4 cantos. Tente outra foto.');
+                    return;
                 }
-            } else {
-                setStatus('✅ Senha salva. Aponte para o QR Code.', 'success');
-                passwordArea.classList.add('hidden');
+                
+                // Aplicar transformação de perspectiva
+                let transformedImage = applyPerspectiveTransform(capturedImageData, corners);
+                
+                // Analisar bolhas
+                let detectedAnswers = analyzeBubbles(transformedImage);
+                
+                // Obter gabarito correto
+                let correctAnswers = [
+                    document.getElementById('gabarito1').value,
+                    document.getElementById('gabarito2').value,
+                    document.getElementById('gabarito3').value,
+                    document.getElementById('gabarito4').value
+                ];
+                
+                // Comparar respostas
+                let acertos = 0;
+                let erros = 0;
+                let answersList = [];
+                
+                for (let row = 0; row < 4; row++) {
+                    let markedLetter = null;
+                    for (let col = 0; col < 5; col++) {
+                        if (detectedAnswers[row][col]) {
+                            markedLetter = getLetterFromIndex(col);
+                            break;
+                        }
+                    }
+                    
+                    let isCorrect = markedLetter === correctAnswers[row];
+                    if (isCorrect) acertos++;
+                    else erros++;
+                    
+                    answersList.push({
+                        questao: row + 1,
+                marked: markedLetter || 'Nenhuma',
+                        correct: correctAnswers[row],
+                        isCorrect: isCorrect
+                    });
+                }
+                
+                // Atualizar interface
+                document.getElementById('scoreDisplay').textContent = `${acertos}/4`;
+                document.getElementById('acertos').textContent = acertos;
+                document.getElementById('erros').textContent = erros;
+                
+                let answersHtml = '';
+                for (let answer of answersList) {
+                    answersHtml += `
+                        <div class="answer-item ${answer.isCorrect ? 'correct' : 'incorrect'}">
+                            <span>Questão ${answer.questao}</span>
+                            <span>${answer.marked} (${answer.correct})</span>
+                        </div>
+                    `;
+                }
+                document.getElementById('answersList').innerHTML = answersHtml;
+                
+                showError('', false);
+                
+            } catch (error) {
+                showError('Erro ao processar imagem: ' + error.message);
             }
-        });
+        }
         
-        btnCapture.addEventListener('click', captureAndCorrect);
-        
-        btnNewScan.addEventListener('click', () => {
-            // Reseta apenas dados da prova
-            state.examData = null;
-            state.decryptedAnswers = null;
-            
-            resultsArea.classList.add('hidden');
-            qrInfo.classList.add('hidden');
-            captureArea.classList.add('hidden');
-            passwordArea.classList.add('hidden');
-            
-            setStatus('📷 Pronto para nova leitura', 'info');
-            
-            // Reinicia scan
-            if (state.videoStream) {
-                startQRScan();
-            }
-        });
-        
-        btnCaptureAgain.addEventListener('click', () => {
-            resultsArea.classList.add('hidden');
-            captureArea.classList.remove('hidden');
-            captureAndCorrect();
-        });
-
-        // Aguarda OpenCV
-        window.addEventListener('load', () => {
-            if (typeof cv !== 'undefined') {
-                cv.onRuntimeInitialized = () => {
-                    state.opencvReady = true;
-                    debug('✅ OpenCV pronto');
-                };
+        // Limpar recursos ao sair
+        window.addEventListener('beforeunload', function() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
             }
         });
     </script>
