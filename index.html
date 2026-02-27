@@ -407,31 +407,31 @@
             const data = imageData.data;
             
             let corners = [];
-            let threshold = 50; // Limiar para detecção de pixels escuros
             
-            // Dividir a imagem em regiões para encontrar os cantos
-            const regions = [
-                { x: 0, y: 0, w: width * 0.3, h: height * 0.3 }, // Superior esquerdo
-                { x: width * 0.7, y: 0, w: width * 0.3, h: height * 0.3 }, // Superior direito
-                { x: 0, y: height * 0.7, w: width * 0.3, h: height * 0.3 }, // Inferior esquerdo
-                { x: width * 0.7, y: height * 0.7, w: width * 0.3, h: height * 0.3 } // Inferior direito
+            // Dividir a imagem em quadrantes para encontrar os cantos
+            const quadrants = [
+                { xMin: 0, xMax: width * 0.3, yMin: 0, yMax: height * 0.3 }, // TL
+                { xMin: width * 0.7, xMax: width, yMin: 0, yMax: height * 0.3 }, // TR
+                { xMin: 0, xMax: width * 0.3, yMin: height * 0.7, yMax: height }, // BL
+                { xMin: width * 0.7, xMax: width, yMin: height * 0.7, yMax: height } // BR
             ];
             
-            for (let region of regions) {
-                let darkestX = region.x + region.w / 2;
-                let darkestY = region.y + region.h / 2;
+            for (let q of quadrants) {
+                let darkestX = q.xMin;
+                let darkestY = q.yMin;
                 let minBrightness = 255;
                 
-                // Procurar o pixel mais escuro na região
-                for (let y = region.y; y < region.y + region.h; y += 3) {
-                    for (let x = region.x; x < region.x + region.w; x += 3) {
-                        let index = (y * width + x) * 4;
-                        let brightness = (data[index] + data[index + 1] + data[index + 2]) / 3;
-                        
-                        if (brightness < minBrightness) {
-                            minBrightness = brightness;
-                            darkestX = x;
-                            darkestY = y;
+                // Procurar o ponto mais escuro em cada quadrante
+                for (let y = q.yMin; y < q.yMax; y += 5) {
+                    for (let x = q.xMin; x < q.xMax; x += 5) {
+                        const index = (Math.floor(y) * width + Math.floor(x)) * 4;
+                        if (index + 2 < data.length) {
+                            const brightness = (data[index] + data[index + 1] + data[index + 2]) / 3;
+                            if (brightness < minBrightness) {
+                                minBrightness = brightness;
+                                darkestX = x;
+                                darkestY = y;
+                            }
                         }
                     }
                 }
@@ -442,51 +442,77 @@
             return corners;
         }
         
-        function applyPerspectiveTransform(imageData, corners) {
-            const width = 400;
-            const height = 300;
+        function extractQuadrilateral(imageData, corners, targetWidth, targetHeight) {
+            // Criar canvas temporário para a transformação
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = imageData.width;
+            tempCanvas.height = imageData.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.putImageData(imageData, 0, 0);
             
-            let canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            let ctx = canvas.getContext('2d');
+            // Canvas de destino
+            const destCanvas = document.createElement('canvas');
+            destCanvas.width = targetWidth;
+            destCanvas.height = targetHeight;
+            const destCtx = destCanvas.getContext('2d');
             
-            ctx.drawImage(imageCanvas, 0, 0);
+            // Desenhar a imagem transformada
+            destCtx.save();
+            destCtx.clearRect(0, 0, targetWidth, targetHeight);
             
-            let transformedCanvas = document.createElement('canvas');
-            transformedCanvas.width = width;
-            transformedCanvas.height = height;
-            let transformedCtx = transformedCanvas.getContext('2d');
-            
-            // Coordenadas de destino (retângulo uniforme)
-            let dstCorners = [
-                { x: 0, y: 0 },
-                { x: width, y: 0 },
-                { x: 0, y: height },
-                { x: width, y: height }
+            // Aplicar transformação de perspectiva simplificada
+            // Mapear os cantos para um retângulo
+            const srcPoints = [
+                { x: corners[0].x, y: corners[0].y },
+                { x: corners[1].x, y: corners[1].y },
+                { x: corners[2].x, y: corners[2].y },
+                { x: corners[3].x, y: corners[3].y }
             ];
             
-            // Matriz de transformação simplificada
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    // Mapeamento bilinear simplificado
-                    let srcX = corners[0].x + (corners[1].x - corners[0].x) * (x / width);
-                    let srcY = corners[0].y + (corners[2].y - corners[0].y) * (y / height);
+            const dstPoints = [
+                { x: 0, y: 0 },
+                { x: targetWidth, y: 0 },
+                { x: 0, y: targetHeight },
+                { x: targetWidth, y: targetHeight }
+            ];
+            
+            // Calcular transformação afim para cada triângulo
+            // Dividir o quadrilátero em dois triângulos
+            for (let i = 0; i < destCanvas.width; i++) {
+                for (let j = 0; j < destCanvas.height; j++) {
+                    // Determinar em qual triângulo estamos
+                    let srcX, srcY;
                     
-                    srcX = Math.min(Math.max(srcX, 0), imageData.width - 1);
-                    srcY = Math.min(Math.max(srcY, 0), imageData.height - 1);
+                    if (i / targetWidth + j / targetHeight <= 1) {
+                        // Triângulo superior esquerdo (TL, TR, BL)
+                        const u = i / targetWidth;
+                        const v = j / targetHeight;
+                        srcX = srcPoints[0].x + (srcPoints[1].x - srcPoints[0].x) * u + (srcPoints[2].x - srcPoints[0].x) * v;
+                        srcY = srcPoints[0].y + (srcPoints[1].y - srcPoints[0].y) * u + (srcPoints[2].y - srcPoints[0].y) * v;
+                    } else {
+                        // Triângulo inferior direito (TR, BL, BR)
+                        const u = 1 - i / targetWidth;
+                        const v = 1 - j / targetHeight;
+                        srcX = srcPoints[3].x + (srcPoints[1].x - srcPoints[3].x) * u + (srcPoints[2].x - srcPoints[3].x) * v;
+                        srcY = srcPoints[3].y + (srcPoints[1].y - srcPoints[3].y) * u + (srcPoints[2].y - srcPoints[3].y) * v;
+                    }
                     
-                    let srcIndex = (Math.floor(srcY) * imageData.width + Math.floor(srcX)) * 4;
-                    let dstIndex = (y * width + x) * 4;
+                    // Amostrar pixel da origem
+                    srcX = Math.max(0, Math.min(imageData.width - 1, srcX));
+                    srcY = Math.max(0, Math.min(imageData.height - 1, srcY));
                     
-                    transformedCanvas.data[dstIndex] = imageData.data[srcIndex];
-                    transformedCanvas.data[dstIndex + 1] = imageData.data[srcIndex + 1];
-                    transformedCanvas.data[dstIndex + 2] = imageData.data[srcIndex + 2];
-                    transformedCanvas.data[dstIndex + 3] = 255;
+                    destCtx.fillStyle = `rgb(${getPixel(imageData, srcX, srcY)})`;
+                    destCtx.fillRect(i, j, 1, 1);
                 }
             }
             
-            return transformedCtx.getImageData(0, 0, width, height);
+            destCtx.restore();
+            return destCtx.getImageData(0, 0, targetWidth, targetHeight);
+        }
+        
+        function getPixel(imageData, x, y) {
+            const index = (Math.floor(y) * imageData.width + Math.floor(x)) * 4;
+            return `${imageData.data[index]},${imageData.data[index + 1]},${imageData.data[index + 2]}`;
         }
         
         function analyzeBubbles(imageData) {
@@ -494,35 +520,41 @@
             const height = imageData.height;
             const data = imageData.data;
             
-            let cellWidth = width / 5;
-            let cellHeight = height / 4;
+            const cellWidth = width / 5;
+            const cellHeight = height / 4;
             
             let answers = [];
-            let threshold = 100; // Limiar para considerar preenchido
+            const threshold = 120; // Limiar para considerar preenchido
             
             for (let row = 0; row < 4; row++) {
                 let rowAnswers = [];
                 for (let col = 0; col < 5; col++) {
-                    let startX = Math.floor(col * cellWidth + cellWidth * 0.2);
-                    let endX = Math.floor((col + 1) * cellWidth - cellWidth * 0.2);
-                    let startY = Math.floor(row * cellHeight + cellHeight * 0.2);
-                    let endY = Math.floor((row + 1) * cellHeight - cellHeight * 0.2);
+                    const startX = Math.floor(col * cellWidth + cellWidth * 0.25);
+                    const endX = Math.floor((col + 1) * cellWidth - cellWidth * 0.25);
+                    const startY = Math.floor(row * cellHeight + cellHeight * 0.25);
+                    const endY = Math.floor((row + 1) * cellHeight - cellHeight * 0.25);
                     
                     let totalBrightness = 0;
                     let pixelCount = 0;
                     
-                    for (let y = startY; y < endY; y += 2) {
-                        for (let x = startX; x < endX; x += 2) {
-                            let index = (y * width + x) * 4;
-                            let brightness = (data[index] + data[index + 1] + data[index + 2]) / 3;
-                            totalBrightness += brightness;
-                            pixelCount++;
+                    for (let y = startY; y < endY; y += 3) {
+                        for (let x = startX; x < endX; x += 3) {
+                            const index = (y * width + x) * 4;
+                            if (index + 2 < data.length) {
+                                const brightness = (data[index] + data[index + 1] + data[index + 2]) / 3;
+                                totalBrightness += brightness;
+                                pixelCount++;
+                            }
                         }
                     }
                     
-                    let avgBrightness = totalBrightness / pixelCount;
-                    let isFilled = avgBrightness < threshold;
-                    rowAnswers.push(isFilled);
+                    if (pixelCount > 0) {
+                        const avgBrightness = totalBrightness / pixelCount;
+                        const isFilled = avgBrightness < threshold;
+                        rowAnswers.push(isFilled);
+                    } else {
+                        rowAnswers.push(false);
+                    }
                 }
                 answers.push(rowAnswers);
             }
@@ -545,12 +577,14 @@
                 let corners = detectCorners(capturedImageData);
                 
                 if (corners.length < 4) {
-                    showError('Não foi possível detectar os 4 cantos. Tente outra foto.');
+                    showError('Não foi possível detectar os 4 cantos. Tente outra foto com melhor contraste.');
                     return;
                 }
                 
-                // Aplicar transformação de perspectiva
-                let transformedImage = applyPerspectiveTransform(capturedImageData, corners);
+                // Aplicar correção de perspectiva
+                const targetWidth = 500;
+                const targetHeight = 400;
+                let transformedImage = extractQuadrilateral(capturedImageData, corners, targetWidth, targetHeight);
                 
                 // Analisar bolhas
                 let detectedAnswers = analyzeBubbles(transformedImage);
@@ -570,11 +604,18 @@
                 
                 for (let row = 0; row < 4; row++) {
                     let markedLetter = null;
+                    let markedCount = 0;
+                    
                     for (let col = 0; col < 5; col++) {
                         if (detectedAnswers[row][col]) {
                             markedLetter = getLetterFromIndex(col);
-                            break;
+                            markedCount++;
                         }
+                    }
+                    
+                    // Se mais de uma bolha marcada, considerar como não preenchida
+                    if (markedCount !== 1) {
+                        markedLetter = null;
                     }
                     
                     let isCorrect = markedLetter === correctAnswers[row];
@@ -583,7 +624,7 @@
                     
                     answersList.push({
                         questao: row + 1,
-                marked: markedLetter || 'Nenhuma',
+                        marked: markedLetter || 'Nenhuma/Múltipla',
                         correct: correctAnswers[row],
                         isCorrect: isCorrect
                     });
@@ -609,6 +650,7 @@
                 
             } catch (error) {
                 showError('Erro ao processar imagem: ' + error.message);
+                console.error(error);
             }
         }
         
