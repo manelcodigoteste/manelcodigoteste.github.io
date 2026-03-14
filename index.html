@@ -166,17 +166,17 @@ return "R$ " + v.toFixed(2)
 
 function calcular(){
 
-let valorKwh = parseFloat(kwhValor.value) || 0
-let totalKwh = parseFloat(kwhTotal.value) || 0
-let kwhEmanuel = parseFloat(kwhEmanuel.value) || 0
+let valorKwh = parseFloat(document.getElementById("kwhValor").value) || 0
+let totalKwh = parseFloat(document.getElementById("kwhTotal").value) || 0
+let kwhEmanuel = parseFloat(document.getElementById("kwhEmanuel").value) || 0
 
-let iluminacao = parseFloat(iluminacao.value) || 0
-let multa = parseFloat(multa.value) || 0
-let correcao = parseFloat(correcao.value) || 0
-let juros = parseFloat(juros.value) || 0
+let iluminacao = parseFloat(document.getElementById("iluminacao").value) || 0
+let multa = parseFloat(document.getElementById("multa").value) || 0
+let correcao = parseFloat(document.getElementById("correcao").value) || 0
+let juros = parseFloat(document.getElementById("juros").value) || 0
 
-let p2 = parseFloat(p2.value) || 0
-let p3 = parseFloat(p3.value) || 0
+let p2 = parseFloat(document.getElementById("p2").value) || 0
+let p3 = parseFloat(document.getElementById("p3").value) || 0
 
 if(p2 + p3 != 100){
 alert("Os percentuais precisam somar 100%")
@@ -200,12 +200,12 @@ let restante = contaTotal - pagarEmanuel
 let pagarP2 = restante * (p2/100)
 let pagarP3 = restante * (p3/100)
 
-emanuelValor.innerText = moeda(pagarEmanuel)
-restante.innerText = moeda(restante)
-pessoa2.innerText = moeda(pagarP2)
-pessoa3.innerText = moeda(pagarP3)
+document.getElementById("emanuelValor").innerText = moeda(pagarEmanuel)
+document.getElementById("restante").innerText = moeda(restante)
+document.getElementById("pessoa2").innerText = moeda(pagarP2)
+document.getElementById("pessoa3").innerText = moeda(pagarP3)
 
-resultado.style.display="block"
+document.getElementById("resultado").style.display="block"
 
 }
 
@@ -215,10 +215,10 @@ document.querySelectorAll("input").forEach(i=>{
 i.value=""
 })
 
-p2.value=50
-p3.value=50
+document.getElementById("p2").value=50
+document.getElementById("p3").value=50
 
-resultado.style.display="none"
+document.getElementById("resultado").style.display="none"
 
 }
 
