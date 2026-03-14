@@ -27,7 +27,7 @@ color:white;
 background:#111827;
 padding:30px;
 border-radius:16px;
-width:420px;
+width:440px;
 box-shadow:0 20px 40px rgba(0,0,0,0.5);
 }
 
@@ -59,21 +59,38 @@ input:focus{
 outline:2px solid #3b82f6;
 }
 
+.row{
+display:flex;
+gap:10px;
+}
+
 button{
-width:100%;
+flex:1;
 padding:12px;
 margin-top:20px;
 border:none;
 border-radius:10px;
-background:#3b82f6;
-color:white;
 font-size:16px;
 cursor:pointer;
 transition:0.2s;
 }
 
-button:hover{
+.calcular{
+background:#3b82f6;
+color:white;
+}
+
+.calcular:hover{
 background:#2563eb;
+}
+
+.reset{
+background:#ef4444;
+color:white;
+}
+
+.reset:hover{
+background:#dc2626;
 }
 
 .result{
@@ -119,13 +136,23 @@ color:#22c55e;
 <label>Juros</label>
 <input id="juros" type="number" step="0.01" value="0">
 
-<button onclick="calcular()">Calcular</button>
+<label>% Pessoa 2 do restante</label>
+<input id="p2" type="number" value="50">
+
+<label>% Pessoa 3 do restante</label>
+<input id="p3" type="number" value="50">
+
+<div class="row">
+<button class="calcular" onclick="calcular()">Calcular</button>
+<button class="reset" onclick="resetar()">Resetar</button>
+</div>
 
 <div class="result" id="resultado" style="display:none">
 
 <div>Emanuel paga: <span id="emanuelValor"></span></div>
 <div>Valor restante da conta: <span id="restante"></span></div>
-<div>Valor restante dividido por 2: <span id="restante2"></span></div>
+<div>Pessoa 2 paga: <span id="pessoa2"></span></div>
+<div>Pessoa 3 paga: <span id="pessoa3"></span></div>
 
 </div>
 
@@ -139,14 +166,22 @@ return "R$ " + v.toFixed(2)
 
 function calcular(){
 
-let valorKwh = parseFloat(document.getElementById("kwhValor").value) || 0
-let totalKwh = parseFloat(document.getElementById("kwhTotal").value) || 0
-let kwhEmanuel = parseFloat(document.getElementById("kwhEmanuel").value) || 0
+let valorKwh = parseFloat(kwhValor.value) || 0
+let totalKwh = parseFloat(kwhTotal.value) || 0
+let kwhEmanuel = parseFloat(kwhEmanuel.value) || 0
 
-let iluminacao = parseFloat(document.getElementById("iluminacao").value) || 0
-let multa = parseFloat(document.getElementById("multa").value) || 0
-let correcao = parseFloat(document.getElementById("correcao").value) || 0
-let juros = parseFloat(document.getElementById("juros").value) || 0
+let iluminacao = parseFloat(iluminacao.value) || 0
+let multa = parseFloat(multa.value) || 0
+let correcao = parseFloat(correcao.value) || 0
+let juros = parseFloat(juros.value) || 0
+
+let p2 = parseFloat(p2.value) || 0
+let p3 = parseFloat(p3.value) || 0
+
+if(p2 + p3 != 100){
+alert("Os percentuais precisam somar 100%")
+return
+}
 
 let custosFixos = iluminacao + multa + correcao + juros
 
@@ -162,13 +197,28 @@ let contaTotal = energiaTotal + custosFixos
 
 let restante = contaTotal - pagarEmanuel
 
-let restante2 = restante / 2
+let pagarP2 = restante * (p2/100)
+let pagarP3 = restante * (p3/100)
 
-document.getElementById("emanuelValor").innerText = moeda(pagarEmanuel)
-document.getElementById("restante").innerText = moeda(restante)
-document.getElementById("restante2").innerText = moeda(restante2)
+emanuelValor.innerText = moeda(pagarEmanuel)
+restante.innerText = moeda(restante)
+pessoa2.innerText = moeda(pagarP2)
+pessoa3.innerText = moeda(pagarP3)
 
-document.getElementById("resultado").style.display="block"
+resultado.style.display="block"
+
+}
+
+function resetar(){
+
+document.querySelectorAll("input").forEach(i=>{
+i.value=""
+})
+
+p2.value=50
+p3.value=50
+
+resultado.style.display="none"
 
 }
 
