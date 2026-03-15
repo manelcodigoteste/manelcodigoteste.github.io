@@ -152,6 +152,7 @@ color:#22c55e;
 
 <div class="result" id="resultado" style="display:none">
 
+<div>Total da conta: <span id="totalConta"></span></div>
 <div>Emanuel + João Pedro (irmão): <span id="grupo"></span></div>
 <div>João Pedro paga: <span id="joaoPedro"></span></div>
 
@@ -204,6 +205,7 @@ let pagarJoaoPedro = restante * (p3/100)
 
 let grupo = pagarEmanuel + pagarIrmao
 
+document.getElementById("totalConta").innerText = moeda(contaTotal)
 document.getElementById("grupo").innerText = moeda(grupo)
 document.getElementById("joaoPedro").innerText = moeda(pagarJoaoPedro)
 
