@@ -136,6 +136,9 @@ color:#22c55e;
 <label>Juros</label>
 <input id="juros" type="number" step="0.01" value="0">
 
+<label>Adicional bandeira</label>
+<input id="bandeira" type="number" step="0.01" value="0">
+
 <label>% João Pedro (irmão)</label>
 <input id="p2" type="number" value="50">
 
@@ -172,6 +175,7 @@ let iluminacao = parseFloat(document.getElementById("iluminacao").value) || 0
 let multa = parseFloat(document.getElementById("multa").value) || 0
 let correcao = parseFloat(document.getElementById("correcao").value) || 0
 let juros = parseFloat(document.getElementById("juros").value) || 0
+let bandeira = parseFloat(document.getElementById("bandeira").value) || 0
 
 let p2 = parseFloat(document.getElementById("p2").value) || 0
 let p3 = parseFloat(document.getElementById("p3").value) || 0
@@ -181,7 +185,7 @@ alert("Os percentuais precisam somar 100%")
 return
 }
 
-let custosFixos = iluminacao + multa + correcao + juros
+let custosFixos = iluminacao + multa + correcao + juros + bandeira
 
 let energiaTotal = totalKwh * valorKwh
 
