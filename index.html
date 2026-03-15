@@ -136,10 +136,10 @@ color:#22c55e;
 <label>Juros</label>
 <input id="juros" type="number" step="0.01" value="0">
 
-<label>% Pessoa 2 do restante</label>
+<label>% João Pedro (irmão)</label>
 <input id="p2" type="number" value="50">
 
-<label>% Pessoa 3 do restante</label>
+<label>% João Pedro</label>
 <input id="p3" type="number" value="50">
 
 <div class="row">
@@ -149,10 +149,8 @@ color:#22c55e;
 
 <div class="result" id="resultado" style="display:none">
 
-<div>Emanuel paga: <span id="emanuelValor"></span></div>
-<div>Valor restante da conta: <span id="restante"></span></div>
-<div>Pessoa 2 paga: <span id="pessoa2"></span></div>
-<div>Pessoa 3 paga: <span id="pessoa3"></span></div>
+<div>Emanuel + João Pedro (irmão): <span id="grupo"></span></div>
+<div>João Pedro paga: <span id="joaoPedro"></span></div>
 
 </div>
 
@@ -197,13 +195,13 @@ let contaTotal = energiaTotal + custosFixos
 
 let restante = contaTotal - pagarEmanuel
 
-let pagarP2 = restante * (p2/100)
-let pagarP3 = restante * (p3/100)
+let pagarIrmao = restante * (p2/100)
+let pagarJoaoPedro = restante * (p3/100)
 
-document.getElementById("emanuelValor").innerText = moeda(pagarEmanuel)
-document.getElementById("restante").innerText = moeda(restante)
-document.getElementById("pessoa2").innerText = moeda(pagarP2)
-document.getElementById("pessoa3").innerText = moeda(pagarP3)
+let grupo = pagarEmanuel + pagarIrmao
+
+document.getElementById("grupo").innerText = moeda(grupo)
+document.getElementById("joaoPedro").innerText = moeda(pagarJoaoPedro)
 
 document.getElementById("resultado").style.display="block"
 
